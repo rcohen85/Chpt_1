@@ -33,8 +33,7 @@ HAT = [datenum([2012,03,15]), datenum([2012,04,11]);
     datenum([2017,05,09]),datenum([2017,06,28]);
     datenum([2017,10,26]),datenum([2018,05,31]);
     datenum([2017,10,26]),datenum([2018,06,01]);
-    datenum([2018,06,01]),datenum([2018,12,14]);
-    datenum([2018,12,13]),datenum([2019,05 17])];
+    datenum([2018,06,01]),datenum([2018,12,14])];
 % HAT = [ datenum([2016,04,29]),datenum([2017,02,06]);
 %     datenum([2017,05,09]),datenum([2017,10,25]);
 %     datenum([2017,05,09]),datenum([2017,06,28]);
@@ -72,7 +71,7 @@ JAX = [datenum([2009,04,01]), datenum([2009,05,24]);
 
 
 sites = {HZ,OC,NC,BC,WC,NFC,HAT,GS,BP,BS,JAX};
-dates = datenum([2009,01,01]):1:datenum([2019,05,21]);
+dates = [datenum([2009,01,01]):1:datenum([2019,05,21])];
 % dates = [datenum([2016,01,01]):1:datenum([2019,05,21])];
 dates(2:length(sites)+1,:) = NaN;
 
@@ -87,7 +86,7 @@ for i = 1:length(sites)
     q = q-1;
 end
 
-figure(1)
+figure
 plot(dates(1,:),dates(12,:),'.','MarkerSize',25);
 hold on
 plot(dates(1,:),dates(11,:),'.','MarkerSize',25);
@@ -108,11 +107,11 @@ xlabel('Date');
 ylabel('Site');
 title('Atlantic HARP Deployments');
 set(gca,'fontSize',25)
-xticks([datenum(2009,01,01),datenum(2010,01,01),datenum(2011,01,01),...
-    datenum(2012,01,01),datenum(2013,01,01),datenum(2014,01,01),...
-    datenum(2015,01,01), datenum(2016,01,01),datenum(2017,01,01),...
-    datenum(2018,01,01),datenum(2019,01,01)]);
+% xticks([datenum(2009,01,01),datenum(2010,01,01),datenum(2011,01,01),...
+%     datenum(2012,01,01),datenum(2013,01,01),datenum(2014,01,01),...
+%     datenum(2015,01,01), datenum(2016,01,01),datenum(2017,01,01),...
+%     datenum(2018,01,01),datenum(2019,01,01)]);
 datetick('x');
-xlim([datenum(2014,01,01) dates(1,end)]);
+xlim([dates(1,1827) dates(1,end)]);
 
-saveas(gcf,'Atl_HARP_Deps_2014_Present','tiff');
+saveas(gcf,'Atl_HARP_Deps','tiff');

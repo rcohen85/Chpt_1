@@ -49,9 +49,9 @@ deg = char(176);
 imagesc(Atl_sst,clims);
 h = colorbar
 hold on
-plot(ind(1:5,2),ind(1:5,1),'pk','MarkerFaceColor','w','MarkerSize',18);
-plot(ind(6:7,2),ind(6:7,1),'pk','MarkerFaceColor','w','MarkerSize',18);
-plot(ind(8:11,2),ind(8:11,1),'pk','MarkerFaceColor','w','MarkerSize',18);
+plot(ind(1:5,2),ind(1:5,1),'pk','MarkerFaceColor','m','MarkerSize',13);
+plot(ind(6:7,2),ind(6:7,1),'pk','MarkerFaceColor','y','MarkerSize',13);
+plot(ind(8:11,2),ind(8:11,1),'pk','MarkerFaceColor','c','MarkerSize',13);
 hold off
 xlabel('Longitude');
 ylabel('Latitude');
@@ -60,17 +60,17 @@ yticks([49 169 289 409 529]);
 yticklabels({['45' deg],['40' deg],['35' deg], ['30' deg], ['25' deg]})
 xticks([121 241 361 481 601]);
 xticklabels({['80' deg],['75' deg],['70' deg], ['65' deg], ['60' deg]})
-% title({'Scripps Whale Acoustics Lab', 'Passive Acoustic Monitoring Sites'});
-set(gca,'fontSize',14);
+title({'Atlantic Passive', 'Acoustic Monitoring Sites'});
+set(gca,'fontSize',25);
 %title('MODIS Monthly Average SST: March 2019');
 for i = 1:size(sites,2)
     if i >= 1 && i <= 5
-        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','k','FontWeight','bold');
+        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','m','FontWeight','bold');
     elseif i >= 6 && i <= 7
-        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','k','FontWeight','bold');
+        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','r','FontWeight','bold');
     elseif i >= 8 && i <= 11
-        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','k','FontWeight','bold');
+        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','b','FontWeight','bold');
     end
 end
 
-saveas(gcf,'Atl_HARP_Sites_ASA','tiff');
+saveas(gcf,'Atl_HARP_Sites','tiff');
