@@ -1,12 +1,19 @@
-function [trainMSPICI, trainLabelSet, testMSPICI, testLabelSet] = subset_to_trainTest(boutTimes,inDir,varargin)
+
+% inDir - directory containing TPWS, IDI, binned_label and BoutTimes files
+% varargin - can provide (in order) directory to save training/testing
+% files; filename to save training files; filename to save testing files
+
+function [trainMSPICI, trainLabelSet, testMSPICI, testLabelSet] = subset_to_trainTest(inDir,varargin)
 %% Divide bouts between training and testing data
+load(fullfile(inDir,'BoutTimes_3min'));
+
 testBoutSet = [];
 testFiles = {};
 
 trainBoutSet = [];
 trainFiles = {};
 
-for iA = 1:length(boutTimes)
+for iA = 1:length(boutTimes)-1
     
     nBouts = boutTimes(iA).NumBouts;
     
@@ -32,6 +39,10 @@ for iA = 1:length(boutTimes)
         testBoutSet = [testBoutSet;te];
         testFiles = [testFiles;teF];
         
+        if isempty(trF) || isempty(teF)
+            fprintf('Warning: No training/testing data for %s',string(boutTimes(iA).ClickType));
+        end
+        
     else
         fprintf('Warning: Only one bout for %s, not sufficient to both train and test\n',...
             string(boutTimes(iA).ClickType))
@@ -50,7 +61,7 @@ end
 
 %% Load binned_labels files and pull appropriate spectra and ICI into
 % train/test sets
-fileList = dir(fullfile(inDir,'*binned_labels.mat'));
+fileList = dir(fullfile(inDir,'*binned_labels_3min.mat'));
 
 % initialize structs to hold train/test specs & ICI for each click type
 trainSet = struct('ClickType',[],'Specs',[],'ICI',[]);
@@ -66,7 +77,7 @@ for iB = 1:length(fileList)
     teFIdx = strcmp(testFiles,fileName);    % indices of testing bouts from this file, within testBoutSet
     teBouts = testBoutSet(teFIdx,:);  % indices of testing bouts from this file, within boutTimes & CT labels 
     
-    for iC = 1:length(boutTimes) 
+    for iC = 1:length(boutTimes)-1 
         
         if iB == 1
             trainSet(iC).ClickType = boutTimes(iC).ClickType;
@@ -105,13 +116,12 @@ for iB = 1:length(fileList)
     
 end
 
-% Normalize ICI data so distributions can be compared across click types;
-% beef up small train/test sets by sampling with replacement, then store
-% concatenated spectra and ICI for all click types in one array; create
+% Beef up small train/test sets by sampling with replacement, then store 
+% concatenated spectra and ICI for all click types in one array; create 
 % corresponding label vector
 
-trICIMax = max(max(cell2mat(vertcat(trainSet.ICI))));
-teICIMax = max(max(cell2mat(vertcat(testSet.ICI))));
+% trICIMax = max(max(cell2mat(vertcat(trainSet.ICI))));
+% teICIMax = max(max(cell2mat(vertcat(testSet.ICI))));
 
 trainLabelSet = [];
 trainMSPSet = [];
@@ -122,8 +132,9 @@ testMSPSet = [];
 testDTTSet = [];
 
 for iD = 1:length(trainSet)
-    trainSet(iD).ICI = num2cell(cell2mat(trainSet(iD).ICI)/trICIMax,2); % normalize ICI
-    testSet(iD).ICI = num2cell(cell2mat(testSet(iD).ICI)/teICIMax,2);
+
+%     trainSet(iD).ICI = num2cell(cell2mat(trainSet(iD).ICI)/trICIMax,2); % normalize ICI
+%     testSet(iD).ICI = num2cell(cell2mat(testSet(iD).ICI)/teICIMax,2);
     
     trainIdx = 1:size(trainSet(iD).Specs,1);
     testIdx = 1:size(testSet(iD).Specs,1);
@@ -159,11 +170,12 @@ testMSPICI = [testMSPSet,zeros(size(testMSPSet,1),1), testDTTSet];
 trainMSPICI = [trainMSPSet,zeros(size(trainMSPSet,1),1), trainDTTSet];
 
 % If provided with file names, save train and test sets and respective labels
-if length(varargin) == 2
+if length(varargin) == 3
     outDir = varargin{1};
-    train_saveFileName = fullfile(outDIr,varargin{2});
+    train_saveFileName = fullfile(outDir,varargin{2});
     test_saveFileName = fullfile(outDir,varargin{3});
-save(test_saveFileName,'testMSPICI','testLabelSet','-v7.3');
 save(train_saveFileName,'trainMSPICI','trainLabelSet','-v7.3');
+save(test_saveFileName,'testMSPICI','testLabelSet','-v7.3');
+
 end
 end

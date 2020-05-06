@@ -1,0 +1,126 @@
+% Produce several plot types to evaluate the performance of a neural net
+% Load NNet test data and predicted labels
+
+testDir = 'G:\New_NNet_TrainTest\Edited_TPWS_Labels\TrainTest\20200505-093432';
+cd(testDir);
+%load(testData)
+%load(NNetOutput)
+f = 5:0.5:98.5;
+labels = [1:9,11,13,14,16:19];
+types = {'CT10','CT2','CT3','CT4/6','CT5','CT7','CT8','CT9','Blainville''s',...
+    'Cuvier''s','Gervais''','Kogia','Risso''s','Sowerby''s','SpermWhale',...
+    'True''s'};
+
+%% Confusion Matrix
+% True labels are rows, predicted labels are columns
+C = confusionmat(testLabelSet,double(testOut));
+C = C/50; %divide by 5000 and multiply by 100 to get percentages
+C = horzcat([1:19]',C);
+C = array2table(C,'VariableNames',{'TrueClass','Predicted_1','Predicted_2',...
+    'Predicted_3','Predicted_4','Predicted_5','Predicted_6','Predicted_7',...
+    'Predicted_8','Predicted_9','Predicted_10','Predicted_11','Predicted_12',...
+    'Predicted_13','Predicted_14','Predicted_15','Predicted_16','Predicted_17',...
+    'Predicted_18','Predicted_19'});
+
+writetable(C,fullfile(testDir,'ConfusionMatrix.csv'));
+
+%% Plot spectra by predicted label
+
+CT2ind = find(testOut==2);
+CT3ind = find(testOut==3);
+CT4_6ind = find(testOut==4);
+CT5ind = find(testOut==5);
+CT7ind = find(testOut==6);
+CT8ind = find(testOut==7);
+CT9ind = find(testOut==8);
+CT10ind = find(testOut==1);
+Ggind = find(testOut==16);
+Mdind = find(testOut==9);
+Zcind = find(testOut==11);
+Meind = find(testOut==13);
+Kgind = find(testOut==14);
+Mbind = find(testOut==17);
+Mmind = find(testOut==19);
+Pmind = find(testOut==18);
+
+figure(99)
+subplot(4,4,1)
+imagesc([],f,testMSPICI(CT10ind,1:188)');title('CT10');set(gca,'ydir','normal');
+subplot(4,4,2)
+imagesc([],f,testMSPICI(CT2ind,1:188)');title('CT2');set(gca,'ydir','normal');
+subplot(4,4,3)
+imagesc([],f,testMSPICI(CT3ind,1:188)');title('CT3');set(gca,'ydir','normal');
+subplot(4,4,4)
+imagesc([],f,testMSPICI(CT4_6ind,1:188)');title('CT4/6');set(gca,'ydir','normal');
+subplot(4,4,5)
+imagesc([],f,testMSPICI(CT5ind,1:188)');title('CT5');set(gca,'ydir','normal');
+subplot(4,4,6)
+imagesc([],f,testMSPICI(CT7ind,1:188)');title('CT7');set(gca,'ydir','normal');
+subplot(4,4,7)
+imagesc([],f,testMSPICI(CT8ind,1:188)');title('CT8');set(gca,'ydir','normal');
+subplot(4,4,8)
+imagesc([],f,testMSPICI(CT9ind,1:188)');title('CT9');set(gca,'ydir','normal');
+subplot(4,4,9)
+imagesc([],f,testMSPICI(Mdind,1:188)');title('Blainville''s');set(gca,'ydir','normal');
+subplot(4,4,10)
+imagesc([],f,testMSPICI(Zcind,1:188)');title('Cuvier''s');set(gca,'ydir','normal');
+subplot(4,4,11)
+imagesc([],f,testMSPICI(Meind,1:188)');title('Gervais''');set(gca,'ydir','normal');
+subplot(4,4,12)
+imagesc([],f,testMSPICI(Kgind,1:188)');title('Kogia');set(gca,'ydir','normal');
+subplot(4,4,13)
+imagesc([],f,testMSPICI(Ggind,1:188)');title('Risso''s');set(gca,'ydir','normal');
+subplot(4,4,14)
+imagesc([],f,testMSPICI(Mbind,1:188)');title('Sowerby''s');set(gca,'ydir','normal');
+subplot(4,4,15)
+imagesc([],f,testMSPICI(Pmind,1:188)');title('Sperm Whale');set(gca,'ydir','normal');
+subplot(4,4,16)
+imagesc([],f,testMSPICI(Mmind,1:188)');title('True''s');set(gca,'ydir','normal');
+
+suplabel('Bin','x');
+suplabel('Frequency (kHz)','y');
+suplabel('Concatenated Spectra as Labeled by NNet','t');
+
+saveas(gcf,fullfile(testDir,'CatSpecs'),'tiff');
+
+%% ROC Curve
+% for n = labels
+%     labels = testLabelSet==n;
+%     scores = testOut
+%     [X,Y,T,AUC,OPTROCPT] = perfcurve(labels,scores,posclass);
+%     subplot(4,4,n)
+%     plot(x,y)
+% 
+% 
+% end
+%% Precision/Recall Curve
+q = 1;
+k = 1;
+figure(999)
+for n = 1:size(C,1)
+    if n==10 || n==12 || n==15
+        continue
+    else
+        %         tp =  sum(testOut(q:q+5000)==n)/5000;
+        %         fp = (sum(testOut==n)-sum(testOut(q:q+5000)==n))/90000;
+        %         fn = sum(testOut(q:q+5000)~=n)/5000;
+        %         prec = tp/(tp+fp);
+        %         rec = tp/(tp+fn);
+        labels = double(testLabelSet==n);
+        scores = double(testOut==n);
+        [X,Y] = perfcurve(labels, scores, 1, 'XCrit', 'tpr', 'YCrit', 'prec');
+        subplot(4,4,k)
+        plot(X,Y)
+        xlim([0 1]);
+        ylim([0 1]);
+        title(types{k})
+    end
+    suplabel('Recall','x');
+    suplabel('Precision','y');
+    suplabel('Precision-Recall Curves','t');
+   
+    q = (n*5000)+1;
+    k = k+1;
+end
+
+saveas(gcf,fullfile(testDir,'PrecisionRecall'),'tiff');

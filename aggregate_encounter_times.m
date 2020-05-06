@@ -1,8 +1,16 @@
+% Looks at binned labeled click data output by bin_labeled_clicks and
+% determines start/end times of encounters with each label
+% inDir - directory containing binned_labels files
+% binSize - bin duration in minutes
+% maxGap - maximum alloweable gap between clicks to consider them part of
+% the same encounter
+% minBout - minimum duration of an encounter
+
 function boutTimes = aggregate_encounter_times(inDir,binSize,maxGap,minBout)
 
-fileList = dir(fullfile(inDir,'*binned_labels.mat'));
+fileList = dir(fullfile(inDir,'*binned_labels_3min.mat'));
 boutTimes = struct('ClickType',[],'NumBouts',{},'BoutStarts',[],...
-        'BoutEnds',[],'BoutDurs',[],'WhichFile',[]);
+        'BoutEnds',[],'BoutDurs',[],'WhichFile',{});
     
 for iA = 1:length(fileList)
     
@@ -30,12 +38,15 @@ for iA = 1:length(fileList)
                 eb = eb(bdI);
                 nb = length(sb);
             end
+            
+            fileName_rep = repmat(fileName,nb,1);
+            fileName_cell = mat2cell(fileName_rep,repmat(1,size(fileName_rep,1),1));
 
             boutTimes(iB).NumBouts = sum(boutTimes(iB).NumBouts) + nb;
             boutTimes(iB).BoutStarts = [boutTimes(iB).BoutStarts; sb];
             boutTimes(iB).BoutEnds = [boutTimes(iB).BoutEnds; eb];
             boutTimes(iB).BoutDurs = [boutTimes(iB).BoutDurs; boutDur];
-            boutTimes(iB).WhichFile = [boutTimes(iB).WhichFile; repmat(fileName,nb,1)];    
+            boutTimes(iB).WhichFile = [boutTimes(iB).WhichFile;fileName_cell];    
             
         elseif isempty(binned_labels(iB).BinTimes)
             
@@ -43,7 +54,8 @@ for iA = 1:length(fileList)
             
         end
     end
+    fprintf('Done with file %d of %d\n',iA,length(fileList));
 end
-    outName = strrep(fileList(iA).name,'binned_labels','boutTimes');
+    outName = 'BoutTimes_3min';
     save(fullfile(inDir,outName),'boutTimes');
 end
