@@ -39,7 +39,7 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
     fprintf('Binning TPWS %d of %d\n',iA,size(TPWSlist,1));
     
     % Load TPWS and associated labels
-    load(fullfile(inDir,TPWSlist(iA).name),'MTT','MSP','MPP');
+    load(fullfile(inDir,TPWSlist(iA).name));
     load(fullfile(inDir,labelList(iA).name));
     
     % Determine bin start/end times
@@ -55,7 +55,8 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
     % For each label, determine which clicks belong to each bin, test for
     % minPP and minClick thresholds, then calculate mean spectra and ICI
     % dist for each bin
-    binned_labels = struct('ClickType',[],'BinTimes',[],'BinSpecs',[],'ICI_dists',[],'ClickTimes',[]);
+    binned_labels = struct('ClickType',[],'BinTimes',[],'BinSpecs',[],...
+        'ICI_dists',[],'EnvShape',[],'ClickTimes',[]);
     
     for iB = 1:size(Labels,1)  % label index
         
@@ -90,7 +91,8 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
             if isempty(clickInd)
                 continue
             else
-            % calculate normalized mean specs & ICI dists for good bins
+            % calculate normalized mean specs, ICI dists, & mean click envelopes
+            % for good bins
             [g gN] = grp2idx(binInd);
             specs_cell = splitapply(@(x){x},MSP(clickInd,2:189),g);
             specMin = cellfun(@(x) min(x,[],2), specs_cell,'UniformOutput',false);
@@ -116,6 +118,19 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
             normICI_dists(isnan(normICI_dists)) = 0;
             normICI_dists = mat2cell(normICI_dists,ones(size(normICI_dists,1),1,1));
            
+            if size(MSN,2)==200
+                env = abs(hilbert(MSN(clickInd,:)'))';
+            elseif size(MSN,2)==300
+                env = abs(hilbert(MSN(clickInd,51:250)'))';
+            end
+            %envDur = sum(env>median(median(env)*5),2);
+            %maxDur = size(env,2);
+            env_cell = splitapply(@(x){x},env,g);
+            %envDur_cell = splitapply(@(x){x},envDur,g);
+            %envDur_dists = cellfun(@(x) histc(x,1:maxDur),envDur_cell,'UniformOutput',false);
+            envMax = cellfun(@(x) max(x,[],2), env_cell,'UniformOutput',false);
+            envMean = cellfun(@(A,B) mean(A./B), env_cell, envMax, 'UniformOutput',false);
+            
             % get times of good clicks, grouped by bin
             ctimes = splitapply(@(x){x},MTT(clickInd,:),g);
             
@@ -123,13 +138,14 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
             binned_labels(iB).BinTimes = bin_vec(goodBins);
             binned_labels(iB).BinSpecs = norm_binSpecs;
             binned_labels(iB).ICI_dists = normICI_dists;
+            binned_labels(iB).EnvShape = envMean;
             binned_labels(iB).ClickTimes = ctimes;
             end
         end
         
     end
     
-    outName = strrep(TPWSlist(iA).name,'TPWS1','binned_labels_3min');
+    outName = strrep(TPWSlist(iA).name,'TPWS1','binned_labels_5min');
     save(fullfile(outDir,outName),'binned_labels','p')
     
 end
