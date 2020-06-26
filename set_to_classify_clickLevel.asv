@@ -45,12 +45,12 @@ for iFile = 1:length(binList)
             elseif size(MSN,2)==300
                 binEnv = abs(hilbert(MSN(clicksinBin,51:250)'))';
            end
-           
        % if there's more than 1 cluster in this bin, OR not all the clicks are
        % in a cluster:
-       elseif length(binData(iA).nSpec)>1 || length(clicksinBin)>sum(binData(iA).nSpec)
+       elseif length(binData(iA).nSpec)>1 || length(clicksinBin)>sum(binData(iA).nSpec
        
-     
+       % if there's more than 1 cluster in this bin
+       elseif length(binData(iA).nSpec)==1 && length(clicksinBin)>binData(iA).nSpec     
        end
     
        Specs = [Specs; binSpecs];
