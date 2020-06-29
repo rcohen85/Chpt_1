@@ -13,12 +13,12 @@ def load_ts(fileName):
 
 
 # directory = os.fsencode('I:/JAX13D_broad_metadata/TPWS_noMinPeakFr')
-inDir = 'F:/WAT_WC_01_d4-8/ClusterBins_120dB/ClusterToClassify'
+inDir = 'G:/WAT_BS_01_Detector/ToClassify'
 directory = os.fsencode(inDir)
 # load trained network
 os.chdir(directory)
-model = load_model('I:/New_Atl_CTs/WAT18_NNet_Labels/Labeled_Clicks/WAT18_NNet_Training/WAT2018_binLevel_Expand2.h5')
-outDir = 'F:/WAT_WC_01_d4-8/ClusterBins_120dB/ClusterToClassify/labels'
+model = load_model('G:/cluster_NNet/TrainTest/20200625-144042/NNet.h5')
+outDir = 'G:/WAT_BS_01_Detector/ToClassify/labels'
 for file in os.listdir(directory):
 	fileName = os.fsdecode(file)
 	if fileName.endswith("PR95_PPmin120_toClassify.mat"):
