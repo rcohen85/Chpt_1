@@ -1,12 +1,15 @@
 clearvars
-binClustDir = 'F:\WAT_WC_01_d4-8\ClusterBins_120dB'; % directory of cluster_bins output
-binClustFList = dir(fullfile(binClustDir,'WAT_WC_01*.mat'));
-baseDir = 'G:\forNNet\WAT_2018_trainingExamples'; % directory of training folders
+binClustDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB'; % directory of cluster_bins output
+binClustFList = dir(fullfile(binClustDir,'WAT_BS_01*.mat'));
+baseDir = 'I:\NNet_TrainTest\New_Cluster_TrainTest\Set_w_Combos_HighAmp'; % directory of training folders
 
-labelDir = 'F:\WAT_WC_01_d4-8\ClusterToClassify\labels'; % directory of laels
-TPWSDir = 'F:\WAT_WC_01_d4-8\TPWS'; % directory of TPWS files
-TPWSFlist = dir(fullfile(TPWSDir,'\WAT_WC_01*TPWS1.mat'));
-saveDir = 'F:\WAT_WC_01_d4-8\TPWS\zID';
+labelDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
+TPWSDir = 'I:\WAT_BS_01\TPWS'; % directory of TPWS files
+TPWSFlist = dir(fullfile(TPWSDir,'\WAT_BS_01*TPWS1.mat'));
+saveDir = fullfile(TPWSDir,'zID');
+if ~isdir(saveDir)
+    mkdir(saveDir)
+end  
 minCounts = 25; % minimum counts required to consider labels, should be higher for dolphin than bw
 countsPerBinAll = [];
 binTimesAll = [];
@@ -17,7 +20,7 @@ typeList = typeList(vertcat(typeList.isdir));
 
 %%% Modify to determine which types are labeled as false, vs. given an ID
 %%% number
-falseIdx = [9,11,14]; % anything matching these NNet labels will be labeled as false.
+falseIdx = [1,12]; % anything matching these NNet labels will be labeled as false.
 % ** NNet labels start from 0, not 1 **
 % idReducer = [1:8,NaN,10,NaN,12:13,NaN,15:19]; % This list should be the same
 % length as typeList, where NaNs are in the false rows, and numbers are in
@@ -30,6 +33,9 @@ for iFile = 1:length(binClustFList)
     zID = [];
     % load cluster bins
     load(fullfile(binClustDir,binClustFList(iFile).name))
+    cInt = vertcat(binData.cInt);
+    goodBins = find(cInt>1);
+    
     % load MTT
     TPWSName = TPWSFlist(iFile).name;
     load(fullfile(TPWSDir,TPWSName),'MTT', 'MPP')
@@ -43,9 +49,10 @@ for iFile = 1:length(binClustFList)
     
     load(fullfile(labelDir,labelName))
     probs = double(probs);
-    countsPerBin = zeros(length(binData),20);
+    countsPerBin = zeros(length(binData),length(typeList)+1);
     count = 1; % index to keep track of which label corresponds to which mean bin spectra
     for iC = 1:length(binData)
+        if ismember(iC,goodBins)
         % find the times of this bin's clicks in the MTT vector
         MTTIdx = find(MTT>=binData(iC).tInt(1,1)& MTT<binData(iC).tInt(1,2));
         
@@ -76,20 +83,20 @@ for iFile = 1:length(binClustFList)
         probSet(nInSet<minCounts) = 0; % only keep labels meeting min counts threshold
 
         % Determine labels for clicks in this bin:
-        if max(probSet)<.85 % if no strong labels, assign all clicks to "unidentified" label
-            zID = [zID;[MTT(MTTIdx),double(repmat(19,size(MTTIdx,1),1))]];
-            countsPerBin(iC,20) = countsPerBin(iC,20)+size(MTTIdx,1); % save total # clicks in this bin
-        elseif sum(probSet>=.85)==1 % if only one strong label in this set, assign appropriate clicks to that label
+        if max(probSet)<.97 % if no strong labels, assign all clicks to "unidentified" label
+            zID = [zID;[MTT(MTTIdx),double(repmat(length(typeList),size(MTTIdx,1),1))]];
+            countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(MTTIdx,1); % save total # clicks in this bin
+        elseif sum(probSet>=.97)==1 % if only one strong label in this set, assign appropriate clicks to that label, other clicks labeled "unidentified"
             [bestScore,bestLabelIdx] = max(probSet);
             iDnum = labelSet(bestLabelIdx);
             unIDtimes = setdiff(MTT(MTTIdx),cTimes{1,bestLabelIdx});
             countsPerBin(iC,iDnum+1) = countsPerBin(iC,iDnum+1)+...
                 nInSet(bestLabelIdx);
-            countsPerBin(iC,20) = countsPerBin(iC,20)+size(MTTIdx,1)-sum(nInSet);
+            countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(MTTIdx,1)-sum(nInSet);
             zID = [zID;[cTimes{1,bestLabelIdx},double(repmat(iDnum,size(cTimes{1,bestLabelIdx},1),1));...
-                unIDtimes,double(repmat(19,size(unIDtimes,1),1))]];
-        elseif sum(probSet>=.85)> 1 % if there are multiple options, assign appropriate clicks to each label
-            posLabelsIdx = find(probSet>=.85);
+                unIDtimes,double(repmat(length(typeList)+1,size(unIDtimes,1),1))]];
+        elseif sum(probSet>=.97)> 1 % if there are multiple options, assign appropriate clicks to each label, isolated clicks labeled "unidentified"
+            posLabelsIdx = find(probSet>=.97);
             highProbLabels = labelSet(posLabelsIdx);
             prunedProbs = probSet(posLabelsIdx);
             for uI = 1:length(highProbLabels)
@@ -100,10 +107,11 @@ for iFile = 1:length(binClustFList)
                     nInSet(posLabelsIdx(uI));
             end
             unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes{1,posLabelsIdx}));
-            zID = [zID;[unIDtimes,double(repmat(19,size(unIDtimes,1),1))]];
-            countsPerBin(iC,20) = countsPerBin(iC,20)+size(MTTIdx,1)-sum(nInSet);
+            zID = [zID;[unIDtimes,double(repmat(length(typeList)+1,size(unIDtimes,1),1))]];
+            countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(MTTIdx,1)-sum(nInSet);
         end
         count = count+n; % advance index to labels/probs for next bin
+        end
     end
     
     zID = sortrows(zID);
@@ -111,9 +119,10 @@ for iFile = 1:length(binClustFList)
     falseLabels = sum(bsxfun(@eq,zID(:,2),falseIdx),2)>0;
     zFD = zID(falseLabels,1);
     zID = zID(~falseLabels,:);
-%     zID(:,2) = idReducer(zID(:,2))';
+    
     save(fullfile(saveDir,zIDName),'zID')
     save(fullfile(saveDir,zFDName),'zFD')
+    
     countsPerBinAll = [countsPerBinAll;countsPerBin];
     tTemp = vertcat(binData.tInt);
     binTimesAll = [binTimesAll;tTemp(:,1)];

@@ -1,5 +1,5 @@
 clearvars;
-inDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB';
+inDir = 'I:\NFC_A_02\NEW_ClusterBins_120dB';
 fList = dir(fullfile(inDir,'*clusters*.mat'));
 if ~isdir(fullfile(inDir,'ToClassify'))
     mkdir(fullfile(inDir,'ToClassify'))
@@ -34,7 +34,7 @@ for iFile = 1:length(fList)
     
     catEnv = vertcat(binData(goodBins).envMean);
     if size(catEnv,2) == 300
-        catEnv = catEnv(goodBins,51:250);
+        catEnv = catEnv(:,51:250);
     end
     catEnvmin = min(catEnv,[],2);
     catEnvNorm = catEnv - catEnvmin;
