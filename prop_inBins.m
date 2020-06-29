@@ -1,8 +1,8 @@
 %% Calculate proportion of clicks included in cluster_bins mean spectra,
-% and proportion isolated across entire deployment
+% and proportion isolated, across entire deployment
 
 
-inDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB';
+inDir = 'I:\WAT_WC_02\NEW_ClusterBins_120dB'; %directory containing cluster_bins output
 binList = dir(fullfile(inDir,'*clusters*.mat'));
 
 percSpec_perFile = zeros(length(binList),1,1);
