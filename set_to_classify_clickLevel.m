@@ -13,7 +13,7 @@ end
 
 if ~isdir(fullfile(outDir,'ClusterToClassify_ClickLevel','labels'))
     mkdir(fullfile(outDir,'ClusterToClassify_ClickLevel','labels'))
-end  
+end
 
 for iFile = 1:length(binList)
     
@@ -21,10 +21,14 @@ for iFile = 1:length(binList)
     Specs = [];
     ICI = [];
     Env = [];
-
+    
     load(fullfile(binList(iFile).folder,binList(iFile).name));
     load(fullfile(TPWSList(iFile).folder,TPWSList(iFile).name));
-     
+    if size(MSN,2) == 300
+        MSN = MSN(51:250);
+    end
+    DTT = [diff(MTT)*24*60*60;NaN];
+    
     % divvy clicks from TPWS into bins
     binEdges = vertcat(binData.tInt);
     [N, edges, whichBin] = histcounts(MTT,[binEdges(:,1);binEdges(end,2)]);
@@ -32,38 +36,60 @@ for iFile = 1:length(binList)
     
     % for each bin, pull appropriate spectra & ICI dist, calculate click
     % envelopes, normalize all
-    for iA = 1:length(binData) 
-         
-       clicksinBin = find(whichBin==iA);
+    for iA = 1:length(binData)
         
-       % if there's only 1 cluster in bin and all the clicks are in it:
-       if length(binData(iA).nSpec)==1 && length(clicksinBin)==binData(iA).nSpec
-           binSpecs = MSP(clicksinBin);
-           binICI = repmat(binData(iA).dTT,length(clicksinBin),1,1);
-           if size(MSN,2)==200
-                binEnv = abs(hilbert(MSN(clicksinBin,:)'))';
-            elseif size(MSN,2)==300
-                binEnv = abs(hilbert(MSN(clicksinBin,51:250)'))';
-           end
-           
-       % if there's more than 1 cluster in this bin, OR not all the clicks are
-       % in a cluster:
-       elseif length(binData(iA).nSpec)>1 || length(clicksinBin)>sum(binData(iA).nSpec)
-       
-     
-       end
+        clicksinBin = find(whichBin==iA);
+        
+        % if there's only 1 cluster in bin and all the clicks are in it:
+        if length(binData(iA).nSpec)==1 && length(clicksinBin)==binData(iA).nSpec
+            binSpecs = MSP(clicksinBin);
+            binICI = repmat(binData(iA).dTT,length(clicksinBin),1,1);
+            binEnv = abs(hilbert(MSN(clicksinBin,:)'))';
+            
+            % if there's more than 1 cluster in this bin, OR not all the clicks are
+            % in a cluster (or both):
+        elseif length(binData(iA).nSpec)>1 || length(clicksinBin)>sum(binData(iA).nSpec)
+            binSpecs = [];
+            binICI = [];
+            binEnv = [];
+            for iB = 1:length(binData(iA).nSpec)
+                thisClusSpecs = MSP(clicksinBin(binData(iA).clickClusterIds{1,iB}));
+                thisClusICI = repmat(binData(iA).dTT(iB,:),length(binData(iA).clickClusterIds{1,iB}),1,1);
+                thisClusEnv = abs(hilbert(MSN(clicksinBin(binData(iA).clickClusterIds{1,iB}),:)'))';
+                
+                binSpecs = [binSpecs;thisClusSpecs];
+                binICI = [binICI;thisClusICI];
+                binEnv = [binEnv;thisClusEnv];
+            end
+            
+            if length(clicksinBin)>sum(binData(iA).nSpec)
+                clusClicks = sortrows(vertcat(binData(iA).clickClusterIds{:,:}));
+                unClusClicks = setdiff(1:length(clicksinBin),clusClicks);
+                
+                unClusSpecs = MSP(clicksinBin(unClusClicks));
+                % using ICI dist of all unclustered clicks **IS THIS A GOOD APPROACH???**
+                unClusICI = repmat(histcounts(DTT(clicksinBin(unClusClicks)),0:0.01:1),... 
+                    length(unClusClicks),1);
+                unClusEnv = abs(hilbert(MSN(clicksinBin(unClusClicks),:)'))';
+                
+                binSpecs = [binSpecs;unClusSpecs];
+                binICI = [binICI;unClusICI];
+                binEnv = [binEnv;unClusEnv];
+            end
+            
+        end
+        
+        Specs = [Specs; binSpecs];
+        ICI = [ICI; binICI];
+        Env = [Env; binEnv];
+        
+    end
     
-       Specs = [Specs; binSpecs];
-       ICI = [ICI; binICI];
-       Env = [Env; binEnv];
-       
-    end 
-
-%     NORMALIZE SPECS, ICI, & ENV
+    %     NORMALIZE SPECS, ICI, & ENV
     
     toClassify = [SpecNorm,zeros(length(clicksinBin),1,1),binICI,...
         zeros(length(clicksinBin),1,1),EnvNorm];
-   
+    
     outFileName = strrep(fList(iFile).name,...
         '.mat',...
         '_toClassify.mat');
