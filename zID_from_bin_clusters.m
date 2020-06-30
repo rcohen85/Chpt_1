@@ -1,11 +1,11 @@
 clearvars
-binClustDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB'; % directory of cluster_bins output
-binClustFList = dir(fullfile(binClustDir,'WAT_BS_01*.mat'));
+binClustDir = 'I:\NFC_A_02\NEW_ClusterBins_120dB'; % directory of cluster_bins output
+binClustFList = dir(fullfile(binClustDir,'*.mat'));
 baseDir = 'I:\NNet_TrainTest\New_Cluster_TrainTest\Set_w_Combos_HighAmp'; % directory of training folders
 
-labelDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
-TPWSDir = 'I:\WAT_BS_01\TPWS'; % directory of TPWS files
-TPWSFlist = dir(fullfile(TPWSDir,'\WAT_BS_01*TPWS1.mat'));
+labelDir = 'I:\NFC_A_02\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
+TPWSDir = 'I:\NFC_A_02\TPWS'; % directory of TPWS files
+TPWSFlist = dir(fullfile(TPWSDir,'\*TPWS1.mat'));
 saveDir = fullfile(TPWSDir,'zID');
 if ~isdir(saveDir)
     mkdir(saveDir)
