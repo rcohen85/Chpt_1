@@ -16,7 +16,7 @@ import datetime
 
 #tensorboard --logdir=G:/NNet_TrainLogs --host localhost --port 8088
 
-trainSetFile = 'G:/cluster_NNet/TrainTest/TrainSet_MSPICIWV_5000.mat'
+trainSetFile = 'G:/cluster_NNet/TrainTest/TrainSet_MSPICIWV_NewSonar_5000.mat'
 mat1 = h5py.File(trainSetFile, 'r')
 
 x_train = mat1['trainMSPICIWV'][()]
@@ -26,7 +26,7 @@ print(x_train.shape)
 print(y_trainMat.shape)
 
 
-testSetFile = 'G:/cluster_NNet/TrainTest/TestSet_MSPICIWV_500.mat'
+testSetFile = 'G:/cluster_NNet/TrainTest/TestSet_MSPICIWV_NewSonar_500.mat'
 mat2 = h5py.File(testSetFile, 'r')
 x_test = mat2['testMSPICIWV'][()]
 x_test = x_test.transpose()
@@ -51,7 +51,7 @@ model.add(Dense(512, activation='relu', kernel_initializer='glorot_uniform', bia
 model.add(Dropout(0.5))
 model.add(Dense(512, activation='relu', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
 model.add(Dropout(0.5))
-model.add(Dense(16, activation='softmax', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
+model.add(Dense(22, activation='softmax', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
 
 #sdg = SGD(lr=0.01, momentum=0.9)# decay=1e-6, nesterov=True)
 model.compile(loss='categorical_crossentropy',

@@ -1,23 +1,26 @@
+%% DEFUNCT: USE AGGREGATE_ENCOUNTER_TIMES
+
 function [boutTimes] = encounter_times(inDir,binSize,minGap,minBout)
 
-fileList = dir(fullfile(inDir,'*binned_labels.mat'));
+boutTimes = struct('ClickType',[],'NumBouts',[],'BoutStarts',[],...
+        'BoutEnds',[],'BoutDurs',[],'WhichFile',{});
+
+fileList = dir(fullfile(inDir,'*binned_labels*.mat'));
 
 for iA = 1:length(fileList)
     
     load(fullfile(inDir,fileList(iA).name));
     CTnum = size(binned_labels,2);
-    boutTimes = struct('ClickType',[],'NumBouts',[],'BoutStarts',[],...
-        'BoutEnds',[],'BoutDurs',[]);
-    
+        
     for iB = 1:CTnum
         
         if isempty(binned_labels(iB).BinTimes)
             boutTimes(iB).ClickType = binned_labels(iB).ClickType;
-            boutTimes(iB).NumBouts = 0;
+            boutTimes(iB).NumBouts = [boutTimes(iB).NumBouts0;
             boutTimes(iB).BoutStarts = [];
             boutTimes(iB).BoutEnds = [];
             boutTimes(iB).BoutDurs = [];
-            boutTimes(iB).
+            boutTimes(iB).WhichFile = [];
             continue
         else
             binTimes = binned_labels(iB).BinTimes;
@@ -40,6 +43,7 @@ for iA = 1:length(fileList)
             boutTimes(iB).BoutStarts = sb;
             boutTimes(iB).BoutEnds = eb;
             boutTimes(iB).BoutDurs = boutDur;
+            boutTimes(iB).WhichFile = cellstr(repmat(fileList(iA).name,nb,1));
         end
     end
     outName = strrep(fileList(iA).name,'binned_labels','boutTimes');

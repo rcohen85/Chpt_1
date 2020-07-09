@@ -12,7 +12,7 @@ for iFile = 1:length(fList)
     load(fullfile(fList(iFile).folder,fList(iFile).name));
     
     cInt = vertcat(binData.cInt);
-    goodBins = find(cInt>1);
+    goodBins = find(cInt>1); % need to leave out bins w a single click due to miscalculation of envMean in old version of cluster_bins
     
     sumTimeMat = [];
     for iTimes = 1:size(binData,1)

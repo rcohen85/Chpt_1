@@ -13,15 +13,15 @@ def load_ts(fileName):
 
 
 # directory = os.fsencode('I:/JAX13D_broad_metadata/TPWS_noMinPeakFr')
-inDir = 'G:/WAT_BS_01_Detector/ToClassify'
+inDir = 'F:/NFC_A_03/NEW_ClusterBins_120dB/ToClassify'
 directory = os.fsencode(inDir)
 # load trained network
 os.chdir(directory)
-model = load_model('G:/cluster_NNet/TrainTest/20200625-144042/NNet.h5')
-outDir = 'G:/WAT_BS_01_Detector/ToClassify/labels'
+model = load_model('G:/cluster_NNet/TrainTest/20200708-123749/NNet.h5')
+outDir = 'F:/NFC_A_03/NEW_ClusterBins_120dB/ToClassify/labels2'
 for file in os.listdir(directory):
 	fileName = os.fsdecode(file)
-	if fileName.endswith("PR95_PPmin120_toClassify.mat"):
+	if fileName.endswith("toClassify.mat"):
 				print(fileName)
 				f = h5py.File(fileName,'r')
 				matData = f['toClassify'].value

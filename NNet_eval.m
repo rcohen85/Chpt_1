@@ -3,18 +3,18 @@
 clearvars
 
 baseDir = 'G:\cluster_NNet\TrainTest';
-load(fullfile(baseDir,'TestSet_MSPICIWV_500.mat')); % update name of testing data file
-%load('G:\forNNet\TestSet_WAT2018_binLevel_Expand');
+load(fullfile(baseDir,'TestSet_MSPICIWV_NewSonar_500.mat')); % update name of testing data file
 q = 500; % # test examples per class
-testDir = fullfile(baseDir,'20200625-132623'); % update folder where NNet output was saved
+testDir = fullfile(baseDir,'20200708-123749'); % update folder where NNet output was saved
 cd(testDir);
 load('TestOutput')
 testOut = testOut+1;
 f = 5.5:0.5:99;
 %labels = [1:9,11,13,14,16:19];
 types = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4\6+CT10','CT5',...
-    'CT8','Cuvier''s','Gervais''','Kogia','Risso''s','Sonar','Sowerby''s',...
-    'SpermWhale','True''s'};
+    'CT8','Cuvier''s','Gervais''','HFA\_15kHz','HFA\_50kHz','HFA\_70kHz',...
+    'Kogia','MFA','MultiFreq\_Sonar','Risso''s','Sowerby''s','SpermWhale',...
+    'Spiky\_Sonar','True''s','Wideband\_Sonar'};
 
 
 
@@ -26,11 +26,14 @@ C = horzcat([1:length(myTypeList)]',C);
 C = array2table(C,'VariableNames',{'TrueClass','Predicted_1','Predicted_2',...
     'Predicted_3','Predicted_4','Predicted_5','Predicted_6','Predicted_7',...
     'Predicted_8','Predicted_9','Predicted_10','Predicted_11','Predicted_12',...
-    'Predicted_13','Predicted_14','Predicted_15','Predicted_16'});
+    'Predicted_13','Predicted_14','Predicted_15','Predicted_16','Predicted_17'...
+    'Predicted_18','Predicted_19','Predicted_20','Predicted_21','Predicted_22'});
 
 writetable(C,fullfile(testDir,'ConfusionMatrix.csv'));
 
 %% Plot spectra by predicted label
+nl = 4; % number of rows of subplots, one subplot per bin
+ml = ceil(length(types)/nl); % number of columns of subplots
 
 n = 1;
 figure(99); clf
@@ -40,7 +43,7 @@ for i = 1:size(C,1)
 %     end
     
     CTind = find(testOut==i);
-    subplot(4,4,n)
+    subplot(nl,ml,n)
     imagesc([],f,testMSPICIWV(CTind,1:188)');
     set(gca,'ydir','normal');
     title(types{n});
@@ -57,6 +60,9 @@ saveas(gcf,fullfile(testDir,'CatSpecs'),'tiff');
 
 
 %% Plot incorrectly labeled spectra
+nl = 4; % number of rows of subplots, one subplot per bin
+ml = ceil(length(types)/nl); % number of columns of subplots
+
 k = 1;
 n = 1;
 figure(999); clf
@@ -69,7 +75,7 @@ for i = 1:size(C,1)
     thisLabel = find(testOut==i);
     misclassIdx = setdiff(thisLabel,exIdx);
     
-    subplot(4,4,n)
+    subplot(nl,ml,n)
     imagesc([],f,testMSPICIWV(misclassIdx,1:188)');
     set(gca,'ydir','normal');
     title(types{n});
@@ -85,6 +91,8 @@ suplabel('Incorrectly Labeled Spectra by Predicted Class','t');
 saveas(gcf,fullfile(testDir,'MisclassSpecs'),'tiff');
 
 %% Precision/Recall Curves
+nl = 4; % number of rows of subplots, one subplot per bin
+ml = ceil(length(types)/nl); % number of columns of subplots
 
 % Percent of data set classified vs. prediction confidence
 maxprobs = max(probs,[],2);
@@ -106,7 +114,7 @@ for iA = 1:size(C,1)
     AUC = trapz(thresh,classProp);
     
     figure(9999)
-    subplot(4,4,n)
+    subplot(nl,ml,n)
     plot(thresh,classProp)
     title(types{n});
     xlim([0 1]);
@@ -154,7 +162,7 @@ for iA = 1:size(C,1)
     AUC = trapz(thresh,correctProp);
     
     figure(99999)
-    subplot(4,4,n)
+    subplot(nl,ml,n)
     plot(thresh,correctProp)
     title(types{n});
     xlim([0 1]);

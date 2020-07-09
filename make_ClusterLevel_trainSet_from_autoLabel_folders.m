@@ -2,10 +2,10 @@
 clearvars
 
 %%%% Paths to modify
-baseDir = 'I:\NNet_TrainTest\New_Cluster_TrainTest\Set_w_Combos_HighAmp';
-outDir = 'I:\NNet_TrainTest\New_Cluster_TrainTest\Set_w_Combos_HighAmp';
-test_saveFileName = 'TestSet_MSPICIWV_500.mat';
-train_saveFileName = 'TrainSet_MSPICIWV_5000.mat';
+baseDir = 'I:\NNet_TrainTest\New_Cluster_NNet\Set_w_Combos_HighAmp';
+outDir = 'I:\NNet_TrainTest\New_Cluster_NNet\Set_w_Combos_HighAmp';
+test_saveFileName = 'TestSet_MSPICIWV_NewSonar_500.mat';
+train_saveFileName = 'TrainSet_MSPICIWV_NewSonar_5000.mat';
 %%%%
 
 %%

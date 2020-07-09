@@ -5,12 +5,14 @@
 
 % Load TPWS & label files 
 clearvars
-cd('G:\Report_CTs\Labeled_Clicks\Subset_for_CatSpecs');
+TPWSdir = 'I:\WAT_BS_01\TPWS';
+labelDir = 'I:\WAT_BS_01\TPWS';
+% saveName = 'NFC_CTs';
 
-saveName = 'NFC_CTs';
-fileDir = 'G:\Report_CTs\Labeled_Clicks\Subset_for_CatSpecs\NFC';
-labelList = dir([fileDir,'\*_predLab.mat']);
-TPWSList = dir([fileDir,'\*_TPWS1.mat']);
+TPWSList = dir([TPWSdir,'\*_TPWS1.mat']);
+%labelList = dir([labelDir,'\*_predLab.mat']);
+labelList = dir([labelDir,'\*_ID1mat']);
+
 CTs = {};
 
 % Loop through files and add to the CTs array
@@ -18,19 +20,20 @@ ct_ind = [];
 for i = 1:length(labelList)
     fprintf('Getting clicks from file %d of %d\n',i,length(labelList)) 
     
-    load([fileDir,'\',labelList(i).name],'predLabels');
-    load([fileDir,'\',TPWSList(i).name],'MSP','MSN','MTT');
+    %load([labelDir,'\',labelList(i).name],'predLabels');
+    load([labelDir,'\',labelList(i).name],'zID');
+    load([TPWSdir,'\',TPWSList(i).name],'MSP','MSN','MTT');
     nCTs = unique(predLabels); 
+    ici = diff(MTT)*60*60*24;
     
     % each row of CTs will contain click spectra, time series, and ICI for one
     % click type
     for j = 1:length(nCTs)
-        ici = diff(MTT)*60*60*24;
         ind = find(predLabels==nCTs(j));
-        if length(ind) <= 5000  % grab a subset of the labeled clicks to moderate file size
+        if length(ind) <= 5000  
             k = length(ind);
         else
-            k = 5000;
+            k = 5000; % grab a subset of the labeled clicks to moderate file size
         end
         ct_ind = sort(datasample(ind,k,'Replace',false));
         if i==1
@@ -53,11 +56,12 @@ for i = 1:length(labelList)
 end
 
 CTs = cell2struct(CTs,{'NN_Label','Spectra','ICI','Timeseries'},2);
-save(saveName,'CTs','-v7.3');
+% save(saveName,'CTs','-v7.3');
 %% Plot concatenated clicks for each click label
-clearvars
-project = 'HAT';
-load('HAT_CTs');
+% clearvars
+project = 'WAT\_BS\_01';
+saveDir = 'I:\WAT_BS_01\TPWS\zID';
+% load('HAT_CTs');
 f = 4.5:0.5:99.5;
 
 for i = 1:length(CTs)
@@ -95,7 +99,7 @@ set(gca,'fontSize',13);
 
 [ax,h3]=suplabel(sprintf('%s NNet Label %d',project,CTs(i).NN_Label),'t',[.075 .075 .85 .89] );
 set(ax,'fontSize',16);
-saveas(figure(1),sprintf('%s_NNet_%d',project,CTs(i).NN_Label),'tiff');
+saveas(figure(1),fullfile(saveDir,sprintf('%s_NNet_%d',project,CTs(i).NN_Label)),'tiff');
 end
 
 %% Concatenate clicks sharing a label across sites

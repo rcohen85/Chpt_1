@@ -8,7 +8,7 @@
 
 function boutTimes = aggregate_encounter_times(inDir,binSize,maxGap,minBout)
 
-fileList = dir(fullfile(inDir,'*binned_labels_3min.mat'));
+fileList = dir(fullfile(inDir,'*binned_labels*.mat'));
 boutTimes = struct('ClickType',[],'NumBouts',{},'BoutStarts',[],...
         'BoutEnds',[],'BoutDurs',[],'WhichFile',{});
     
@@ -25,28 +25,42 @@ for iA = 1:length(fileList)
         
         if ~isempty(binned_labels(iB).BinTimes)
             binTimes = binned_labels(iB).BinTimes;
-            dt = diff(binTimes*24*60); % time between bin starts (minutes)
-            gapTimes = find(dt > maxGap); % start indices of gaps
-            sb = [binTimes(1);binTimes(gapTimes+1)];   % start time of bout
-            eb = [binTimes(gapTimes);binTimes(end)]+(binSize/(24*60));   % end time of bout
-            boutDur = (eb - sb)*24*60; % bout duration (minutes)
-            
+            if length(binTimes)>1
+                dt = diff(binTimes*24*60); % time between bin starts (minutes)
+                gapTimes = find(dt > maxGap); % start indices of gaps
+                sb = [binTimes(1);binTimes(gapTimes+1)];   % start time of bout
+                eb = [binTimes(gapTimes);binTimes(end)]+(binSize/(24*60));   % end time of bout
+            else
+                sb = binTimes(1);
+                eb = binTimes(1)+(binSize/(24*60));
+            end
+            boutDur = round((eb - sb)*24*60,4); % bout duration (minutes)
+
             if ~isempty(minBout)
-                bdI = find(boutDur > minBout);
+                bdI = find(boutDur >= minBout);
                 boutDur = boutDur(bdI);
                 sb = sb(bdI);
                 eb = eb(bdI);
                 nb = length(sb);
             end
             
-            fileName_rep = repmat(fileName,nb,1);
-            fileName_cell = mat2cell(fileName_rep,repmat(1,size(fileName_rep,1),1));
+%             fileName_rep = repmat(fileName,nb,1);
+            fileName_cell = cellstr(repmat(fileName,nb,1));
 
             boutTimes(iB).NumBouts = sum(boutTimes(iB).NumBouts) + nb;
             boutTimes(iB).BoutStarts = [boutTimes(iB).BoutStarts; sb];
             boutTimes(iB).BoutEnds = [boutTimes(iB).BoutEnds; eb];
             boutTimes(iB).BoutDurs = [boutTimes(iB).BoutDurs; boutDur];
-            boutTimes(iB).WhichFile = [boutTimes(iB).WhichFile;fileName_cell];    
+            boutTimes(iB).WhichFile = [boutTimes(iB).WhichFile;fileName_cell];
+            
+            binTimes = [];
+            dt = [];
+            gapTimes = [];
+            sb = [];
+            eb = [];
+            boutDur = [];
+            bdI = [];
+            nb = [];
             
         elseif isempty(binned_labels(iB).BinTimes)
             
@@ -56,6 +70,6 @@ for iA = 1:length(fileList)
     end
     fprintf('Done with file %d of %d\n',iA,length(fileList));
 end
-    outName = 'BoutTimes_3min';
+    outName = 'BoutTimes';
     save(fullfile(inDir,outName),'boutTimes');
 end

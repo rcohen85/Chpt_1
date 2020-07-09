@@ -1,3 +1,5 @@
+%% Build neural network training/testing sets from bin_labeled_clicks and 
+% encounter_times output
 
 % inDir - directory containing TPWS, IDI, binned_label and BoutTimes files
 % varargin - can provide (in order) directory to save training/testing

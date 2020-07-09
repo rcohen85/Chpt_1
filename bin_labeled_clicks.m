@@ -2,29 +2,33 @@
 % calculate mean spectra and ICI dist per bin
 % inDir - directory containing TPWS and associated ID1 files
 % outDir - directory to save binned_labels output
-% Labels - Nx2 cell array in which first column is the name of each click
-% type/species, and the second column is the number label used to identify
-% that click type/species in the ID1 file
+% Labels (can be left empty) - Nx2 cell array in which first column is the 
+% name of each click type/species, and the second column is the number label
+% used to identify that click type/species in the ID1 file
 % binSize - desired time bin duration in minutes
-% minClicks - minimum number of clicks in a bin for a mean spectrum & ICI
-% to be calculated; Nx1 vector
+% minClicks (can be left empty) - minimum number of clicks in a bin for a 
+% mean spectrum & ICI to be calculated; Nx1 vector
 % minPP - minimum peak-to-peak amplitude required to retain clicks
-function [binned_labels] = bin_labeled_clicks(inDir,outDir,Labels,binSize,minClicks,minPP)
+function [binned_labels] = bin_labeled_clicks(inDir,outDir,Labels,binSize,minClicks,minPP,saveSuffix)
 
 if isempty(Labels)
-    Labels = {'CT10',0;'CT2',1;'CT3',2;'CT4_6',3;'CT5',4;'CT7',5;'CT8',6;...
-        'CT9',7;'Blainvilles',8;'Boats',9;'Cuviers',10;'Echosounder',11;...
-        'Gervais',12;'Kogia',13;'Noise',14;'Rissos',15;'Sowerbys',16;...
-        'Spermwhale',17;'Trues',18;'Unidentified',19};
+    Labels = {'Blainvilles',0;'Boats',1;'CT11',2;'CT2+CT9',3;'CT3+CT7',4;'CT4_6+CT10',5;'CT5',6;...
+        'CT8',7;'Cuviers',8;'Gervais',9;'Kogia',10;'Rissos',11;...
+        'Sonar',12;'Sowerby',13;'Sperm',14;'True',15;'Unidentified',16};
 end
 if isempty(minClicks)
     %minClicks = [15,15,15,15,15,15,15,15,10,5,10,5,10,15,5,15,10,8,10,10];
-    minClicks = [10,10,10,10,10,10,10,10,7,5,7,5,7,10,5,10,7,6,7,7];
+    minClicks = 50;
 end
 
 % Create parameter struct to be saved with output
-p = struct('inDir',inDir,'outDir',outDir,'Labels',Labels,'binSize',...
-    binSize,'minClicks',minClicks,'minPP',minPP);
+p.inDir = inDir;
+p.outDir = outDir;
+p.Labels = Labels;
+p.binSize = binSize;
+p.minClicks = minClicks;
+p.minPP = minPP;
+
 
 TPWSlist = dir(fullfile(inDir,'*TPWS1.mat'));
 labelList = dir(fullfile(inDir,'*ID1.mat'));
@@ -63,7 +67,7 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
         binned_labels(iB).ClickType = Labels(iB,1);
         
         % get times of this label
-        labelInd1 = zID(:,2)==cell2mat(Labels(iB,2));
+        labelInd1 = find(zID(:,2)==cell2mat(Labels(iB,2)));
         thisLabel = zID(labelInd1,:);
         
         if isempty(thisLabel)
@@ -72,19 +76,25 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
             % find clicks in TPWS and remove clicks below minPP threshold,
             % then find remaining loud clicks in thisLabel
             [~, clickInd, ~] = intersect(MTT,thisLabel(:,1));
-            clickInd(MPP(clickInd) <= minPP) = [];                          % good click indices in TPWS vars
+            clickInd(MPP(clickInd) <= minPP) = [];         % indices of nice loud click in TPWS vars
             [~, ~, labelInd2] = intersect(MTT(clickInd),thisLabel(:,1));
-            goodLabels = thisLabel(labelInd2,:);                            % labels of nice loud clicks
+            goodLabels = thisLabel(labelInd2,:);           % labels of nice loud clicks
             
             % divvy clicks into bins
             edges = [bin_vec; bin_vec(end)+bin_inc];
-            [bin_count, ~, binInd] = histcounts(goodLabels(:,1),edges);
+            [bin_count, ~, binInd] = histcounts(goodLabels(:,1),edges); % number of clicks in each bin...
+            % & vector telling which bin each element of goodLabels fall into
             
             % identify bins meeting the minClicks thresh; discard all
             % bins, clicks, and labels not meeting minClicks thresh
-            goodBins = find(bin_count > minClicks(iB));
-            Lia = ismember(binInd,goodBins);
-            binInd(Lia==0) = [];
+            if length(minClicks)==length(Labels)
+                goodBins = find(bin_count > minClicks(iB));
+            elseif length(minClicks)==1
+                goodBins = find(bin_count > minClicks); % bins containing exceeding minClicks thresh
+            end
+            
+            Lia = ismember(binInd,goodBins); % find which clicks fall into those bins exceeding minClicks thresh
+            binInd(Lia==0) = []; % discard labels for clicks in bins with too few clicks
             clickInd(Lia==0) = [];
             goodLabels(Lia==0,:) = [];
             
@@ -108,7 +118,7 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
             ICI = diff(MTT)*24*60*60;
             ICI(end+1) = NaN;
             ICI_cell = splitapply(@(x){x},ICI(clickInd),g);
-            binICI_dists = cell2mat(cellfun(@(x) histcounts(x,0:.01:.6),ICI_cell,'UniformOutput',false));
+            binICI_dists = cell2mat(cellfun(@(x) histcounts(x,0:.01:1),ICI_cell,'UniformOutput',false));
             ICImax = max(binICI_dists,[],2);
             %ICImax = cellfun(@max, binICI_dists,'UniformOutput',false);
             normICI_dists = binICI_dists./ICImax;
@@ -145,7 +155,7 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
         
     end
     
-    outName = strrep(TPWSlist(iA).name,'TPWS1','binned_labels_5min');
+    outName = strrep(TPWSlist(iA).name,'TPWS1',['binned_labels_',saveSuffix]);
     save(fullfile(outDir,outName),'binned_labels','p')
     
 end
