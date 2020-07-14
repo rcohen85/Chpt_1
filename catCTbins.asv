@@ -3,18 +3,23 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'I:\JAX10C\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
 % directory containing label files 
-labDir = 'I:\JAX10C\NEW_ClusterBins_120dB\ToClassify\labels2';
+labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
 NNlab = 0:21; % neural net labels
-savDir = 'I:\NFC_A_02\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'NFC_A_02_BinsbyLabel';
+savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
+clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
+saveName = 'HAT_B_01-03_BinsbyLabel';
 labelThresh = 0.97;
+specInd = 1:188;
+iciInd = 190:290;
+envInd = (292:491);
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
     'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
     'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
     'Spiky Sonar','True''s','Wideband Sonar'};
 
+%%
 binFiles = dir(fullfile(binDir,'*toClassify.mat')); 
 labFiles = dir(fullfile(labDir,'*predLab.mat')); 
 nFiles = size(binFiles,1);
@@ -22,7 +27,7 @@ nn = length(NNlab);
 
 % initialize matrix to hold spectra, times, and deployment info
 data = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
-    'Env',[],'Deployment',[]);
+    'Env',[],'File',[],'WhichCell',[]);
 for i = 1:nn
     data(i).CT = CTs{i};
     data(i).NNet_Lab = NNlab(i);
@@ -34,7 +39,8 @@ for i=1:nFiles
     load(fullfile(binDir, binFiles(i).name));
     load(fullfile(labDir, labFiles(i).name));
     
-    stringGrab = binFiles(i).name(1:17);
+    stringGrab = binFiles(i).name;
+    stringGrab = erase(stringGrab,clusterSuffix);
     
     for j=1:nn
     % find bins labeled with target label, with prob > labelThresh
@@ -45,10 +51,11 @@ for i=1:nFiles
     if ~isempty(labInd)
         if exist('toClassify')
             labTime = sumTimeMat(labInd,1);
-            labSpec = toClassify(labInd,1:188);
-            labICI = toClassify(labInd,190:290);
-            labEnv = toClassify(labInd,292:end);
-            dep = cellstr(repmat(stringGrab,length(labInd),1,1));
+            labSpec = toClassify(labInd,specInd);
+            labICI = toClassify(labInd,iciInd);
+            labEnv = toClassify(labInd,envInd);
+            labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
+            labCell = whichCell(labInd);
 %         elseif exist('nnVec')
 %             labTime = catTimes(labInd,1);
 %             labSpec = nnVec(labInd,1:188);
@@ -63,8 +70,12 @@ for i=1:nFiles
         data(j).BinSpecs = [data(j).BinSpecs;labSpec];
         data(j).ICI = [data(j).ICI;labICI];
         data(j).Env = [data(j).Env;labEnv];
-        data(j).Deployment = [data(j).Deployment;dep];
+        data(j).File = [data(j).File;labFile];
+        data(j).WhichCell = [data(j).WhichCell;labCell];
     end
+    
+    
+    
     end
     fprintf('Done with file %d of %d\n',i,nFiles);
 end

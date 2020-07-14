@@ -1,5 +1,5 @@
 clearvars;
-inDir = 'I:\NFC_A_02\NEW_ClusterBins_120dB';
+inDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB';
 fList = dir(fullfile(inDir,'*clusters*.mat'));
 if ~isdir(fullfile(inDir,'ToClassify'))
     mkdir(fullfile(inDir,'ToClassify'))
@@ -15,10 +15,12 @@ for iFile = 1:length(fList)
     goodBins = find(cInt>1); % need to leave out bins w a single click due to miscalculation of envMean in old version of cluster_bins
     
     sumTimeMat = [];
+    whichCell = [];
     for iTimes = 1:size(binData,1)
         if ismember(iTimes,goodBins)
         sumTimeMat = [sumTimeMat;repmat(binData(iTimes).tInt,...
             size(binData(iTimes).nSpec,2),1)];
+        whichCell = [whichCell;[1:size(binData(iTimes).nSpec,2)]'];
         end
     end
     
@@ -49,5 +51,5 @@ for iFile = 1:length(fList)
     
     outFileName = strrep(fList(iFile).name,'.mat','_toClassify.mat');
     save(fullfile(fList(iFile).folder,'ToClassify',outFileName),...
-        'toClassify','sumTimeMat','nSpecMat','-v7.3')
+        'toClassify','sumTimeMat','whichCell','nSpecMat','-v7.3')
 end

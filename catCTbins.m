@@ -3,71 +3,90 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'I:\JAX_D_13\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
 % directory containing label files 
-labDir = 'I:\JAX_D_13\NEW_ClusterBins_120dB\ToClassify\labels2';
+labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
 NNlab = 0:21; % neural net labels
-savDir = 'I:\JAX_D_13\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'JAX_D_13_BinsbyLabel';
+savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
+clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
+saveName = 'HAT_B_01-03_BinsbyLabel';
 labelThresh = 0.97;
+specInd = 1:188;
+iciInd = 190:290;
+envInd = (292:491);
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
     'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
     'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
     'Spiky Sonar','True''s','Wideband Sonar'};
 
-binFiles = dir(fullfile(binDir,'*toClassify.mat')); 
-labFiles = dir(fullfile(labDir,'*predLab.mat')); 
+%%
+binFiles = dir(fullfile(binDir,'*toClassify.mat'));
+labFiles = dir(fullfile(labDir,'*predLab.mat'));
 nFiles = size(binFiles,1);
 nn = length(NNlab);
 
 % initialize matrix to hold spectra, times, and deployment info
 data = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
-    'Env',[],'Deployment',[]);
+    'Env',[],'File',[],'WhichCell',[],'Probs',[]);
 for i = 1:nn
     data(i).CT = CTs{i};
     data(i).NNet_Lab = NNlab(i);
 end
 
 % load one cluster & corresponding label file at a time, pull out spectra,
-% bin start times, and bin ICI dist for each NNet label 
+% bin start times, and bin ICI dist for each NNet label
 for i=1:nFiles
     load(fullfile(binDir, binFiles(i).name));
     load(fullfile(labDir, labFiles(i).name));
     
-    stringGrab = binFiles(i).name(1:17);
+    stringGrab = binFiles(i).name;
+    stringGrab = erase(stringGrab,clusterSuffix);
     
     for j=1:nn
-    % find bins labeled with target label, with prob > labelThresh
-    labInd = find(predLabels==NNlab(j));
-    labInd = labInd(probs(labInd,j)>=labelThresh);
-    
-    % If high confidence labels exist, find times of labeled bins
-    if ~isempty(labInd)
-        if exist('toClassify')
-            labTime = sumTimeMat(labInd,1);
-            labSpec = toClassify(labInd,1:188);
-            labICI = toClassify(labInd,190:290);
-            labEnv = toClassify(labInd,292:end);
-            dep = cellstr(repmat(stringGrab,length(labInd),1,1));
-%         elseif exist('nnVec')
-%             labTime = catTimes(labInd,1);
-%             labSpec = nnVec(labInd,1:188);
-%             labICI = nnVec(labInd,190:250);
-%             dep = cellstr(repmat(stringGrab,length(labInd),1,1));
-        else
-            fprintf('Error: Don''t recognize cluster variable names\n');
-            return
+        % find bins labeled with target label, with prob > labelThresh
+        labInd = find(predLabels==NNlab(j));
+        labInd = labInd(probs(labInd,j)>=labelThresh);
+        
+        % If high confidence labels exist, find times of labeled bins
+        if ~isempty(labInd)
+            if exist('toClassify')
+                labTime = sumTimeMat(labInd,1);
+                labSpec = toClassify(labInd,specInd);
+                labICI = toClassify(labInd,iciInd);
+                labEnv = toClassify(labInd,envInd);
+                labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
+                labCell = whichCell(labInd);
+                labProbs = probs(labInd,j);
+            else
+                fprintf('Error: Don''t recognize cluster variable names\n');
+                return
+            end
+            
+            data(j).BinTimes = [data(j).BinTimes;labTime];
+            data(j).BinSpecs = [data(j).BinSpecs;labSpec];
+            data(j).ICI = [data(j).ICI;labICI];
+            data(j).Env = [data(j).Env;labEnv];
+            data(j).File = [data(j).File;labFile];
+            data(j).WhichCell = [data(j).WhichCell;labCell];
+            data(j).Probs = [data(j).Probs;labProbs];
         end
         
-        data(j).BinTimes = [data(j).BinTimes;labTime];
-        data(j).BinSpecs = [data(j).BinSpecs;labSpec];
-        data(j).ICI = [data(j).ICI;labICI];
-        data(j).Env = [data(j).Env;labEnv];
-        data(j).Deployment = [data(j).Deployment;dep];
-    end
     end
     fprintf('Done with file %d of %d\n',i,nFiles);
 end
+
+% Sort bins into chronological order
+for j = 1:nn
+[B, sortInd] = sortrows(data(j).BinTimes);
+data(j).BinTimes = data(j).BinTimes(sortInd);
+data(j).BinSpecs = data(j).BinSpecs(sortInd,:);
+data(j).ICI = data(j).ICI(sortInd,:);
+data(j).Env = data(j).Env(sortInd,:);
+data(j).File = data(j).File(sortInd,:);
+data(j).WhichCell = data(j).WhichCell(sortInd);
+data(j).Probs = data(j).Probs(sortInd);
+end
+
 save(fullfile(savDir, saveName),'data','-v7.3');
 
 %% Plotting concatenated spectra

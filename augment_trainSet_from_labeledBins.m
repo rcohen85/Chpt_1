@@ -23,7 +23,7 @@ set(gca,'ydir','normal');
 
 binSelect = ginput(2);
 
-subInd = [round(binSelect(1,1)):round(binSelect(2,1))];
+subInd = round(binSelect(1,1)):round(binSelect(2,1));
 
 specs = data(type).BinSpecs(ind(subInd),:);
 ici = data(type).ICI(ind(subInd),:);

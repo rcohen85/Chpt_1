@@ -78,14 +78,14 @@ for i = 1:N %for each CT, determine which labels to keep and which to flag
             [Lia Locb] = ismember(ind,indVec);
             if sum(Lia)>=1
                 fprintf('WARNING: Some or all of the selected bin(s) already have flags which will be overwritten\n');
-                indVec(Locb) = [];
-                flagMat(i).BinTimes(Locb) = [];
-                flagMat(i).Probs(Locb) = [];
-                flagMat(i).WhichCell(Locb) = [];
-                flagMat(i).File(Locb) = [];
-                flagMat(i).Flag(Locb) = [];
+            flagMat(i).BinTimes(Locb) = [];
+            flagMat(i).Probs(Locb) = [];
+            flagMat(i).WhichCell(Locb) = [];
+            flagMat(i).File(Locb) = [];
+            flagMat(i).Flag(Locb) = [];
             end
-            indVec = [indVec,ind'];
+            indVec = [indVec,ind];
+            indVec = unique(indVec);
             
             c = input('Enter 1 to keep, 0 to discard label(s) for this selection: ');
             flagMat(i).CT = data(i).CT;
