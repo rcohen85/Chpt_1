@@ -16,111 +16,120 @@ f = 5:0.5:98.5;
 
 %% Plot bins by label, sorted by label confidence (low to high, left to right)
 % and ask for user input to determine how to flag labels
-
-flagMat = struct('CT',[],'BinTimes',[],'Probs',[],'WhichCell',[],'File',[],'Flag',[]);
-N = length(CTs);
-
-for i = 1:N %for each CT, determine which labels to keep and which to flag
-    
-    probs = vertcat(data(i).Probs);
-    [probs, I] = sortrows(probs);
-    catSpecs = vertcat(data(i).BinSpecs);
-    catSpecs = catSpecs(I,:);
-    ICI = vertcat(data(i).ICI);
-    meanICI = mean(ICI,1);
-    t = 0:.01:1;
-    
-    figure(1)
-    subplot(1,4,1:3)
-    imagesc([],f,catSpecs');
-    set(gca,'ydir','normal');
-    colormap(jet);
-    ylabel('Frequency (kHz)');
-    xlabel('Bin Number');
-    title(CTs{i});
-    set(gca,'fontSize',14);
-    subplot(1,4,4)
-    plot(t,meanICI,'LineWidth',2);
-    grid on
-    xticks([0 0.25 0.5 0.75 1]);
-    xlabel('ICI (s)');
-    ylabel('Normalized Counts');
-    set(gca,'fontSize',14);
-    
-    a = input('Enter 1 to keep all labels, 0 to discard all labels, or 2 to select bins to flag: ');
-    
-    if a==1 || a==0
-        flagMat(i).CT = data(i).CT;
-        flagMat(i).BinTimes = data(i).BinTimes;
-        flagMat(i).Probs = data(i).Probs;
-        flagMat(i).WhichCell = data(i).WhichCell;
-        flagMat(i).File = data(i).File;        
-%     elseif a==0
+% 
+% flagMat = struct('CT',[],'BinTimes',[],'Probs',[],'WhichCell',[],'File',[],'Flag',[]);
+% N = length(CTs);
+% 
+% for i = 1:N %for each CT, determine which labels to keep and which to flag
+%     
+%     probs = vertcat(data(i).Probs);
+%     [probs, I] = sortrows(probs);
+%     catSpecs = vertcat(data(i).BinSpecs);
+%     catSpecs = catSpecs(I,:);
+%     ICI = vertcat(data(i).ICI);
+%     meanICI = mean(ICI,1);
+%     t = 0:.01:1;
+%     
+%     figure(1)
+%     subplot(1,4,1:3)
+%     imagesc([],f,catSpecs');
+%     set(gca,'ydir','normal');
+%     colormap(jet);
+%     ylabel('Frequency (kHz)');
+%     xlabel('Bin Number');
+%     title(CTs{i});
+%     set(gca,'fontSize',14);
+%     subplot(1,4,4)
+%     plot(t,meanICI,'LineWidth',2);
+%     grid on
+%     xticks([0 0.25 0.5 0.75 1]);
+%     xlabel('ICI (s)');
+%     ylabel('Normalized Counts');
+%     set(gca,'fontSize',14);
+%     
+%     a = [];
+%     b = [];
+%     
+%     while isempty(a)
+%         a = input('Enter 1 to keep all labels, 0 to discard all labels, or 2 to select bins to flag: ');
+%     end
+%     
+%     if a==1 || a==0
 %         flagMat(i).CT = data(i).CT;
 %         flagMat(i).BinTimes = data(i).BinTimes;
-%         flagMat(i).Probs = data(i).Probs
+%         flagMat(i).Probs = data(i).Probs;
 %         flagMat(i).WhichCell = data(i).WhichCell;
 %         flagMat(i).File = data(i).File;
-        if a==1
-            flagMat(i).Flag = repmat(1,size(data(i).BinTimes,1),1);
-        else
-            flagMat(i).Flag = repmat(0,size(data(i).BinTimes,1),1);
-        end
-        
-    elseif a==2
-        b = 1;
-        indVec = [];
-        while b==1
-            fprintf('Double click single bin or click first and last of a range of bins to flag:\n');
-            binSelect = ginput(2);
-            sorted_ind = round(binSelect(1,1)):round(binSelect(2,1));
-            ind = I(sorted_ind); % go from indices of bins sorted by prob back to indices of bins in "data" matrix
-            [Lia Locb] = ismember(ind,indVec);
-            if sum(Lia)>=1
-                fprintf('WARNING: Some or all of the selected bin(s) already have flags which will be overwritten\n');
-                indVec(Locb) = [];
-                flagMat(i).BinTimes(Locb) = [];
-                flagMat(i).Probs(Locb) = [];
-                flagMat(i).WhichCell(Locb) = [];
-                flagMat(i).File(Locb) = [];
-                flagMat(i).Flag(Locb) = [];
-            end
-            indVec = [indVec,ind'];
-            
-            c = input('Enter 1 to keep, 0 to discard label(s) for this selection: ');
-            flagMat(i).CT = data(i).CT;
-            flagMat(i).BinTimes = [flagMat(i).BinTimes; data(i).BinTimes(ind)];
-            flagMat(i).Probs = [flagMat(i).Probs;data(i).Probs(ind)];
-            flagMat(i).WhichCell = [flagMat(i).WhichCell; data(i).WhichCell(ind)];
-            flagMat(i).File = [flagMat(i).File; data(i).File(ind)];
-            if c==1
-                flagMat(i).Flag = [flagMat(i).Flag; repmat(1,size(data(i).BinTimes(ind),1),1)];
-            elseif c==0
-                flagMat(i).Flag = [flagMat(i).Flag; repmat(0,size(data(i).BinTimes(ind),1),1)];
-            end
-            b = input('Make another selection? Enter 1 for "yes", 0 for "no": ');
-        end
-        d = input('Keep or discard remaining bin labels for this CT? Enter 1 for "keep", 0 for "discard": ');
-        remInd = setdiff(1:size(data(i).BinTimes,1),indVec);
-        flagMat(i).BinTimes = [flagMat(i).BinTimes; data(i).BinTimes(remInd)];
-        flagMat(i).Probs = [flagMat(i).Probs;data(i).Probs(remInd)];
-        flagMat(i).WhichCell = [flagMat(i).WhichCell; data(i).WhichCell(remInd)];
-        flagMat(i).File = [flagMat(i).File; data(i).File(remInd)];
-        flagMat(i).Flag = [flagMat(i).Flag; repmat(d,size(remInd,2),1)];
-    end
-    
-    % Put bins back in chronological order
-    [B sortInd] = sortrows(flagMat(i).BinTimes);
-    flagMat(i).BinTimes = flagMat(i).BinTimes(sortInd);
-    flagMat(i).Probs = flagMat(i).Probs(sortInd);
-    flagMat(i).WhichCell = flagMat(i).WhichCell(sortInd);
-    flagMat(i).File = flagMat(i).File(sortInd);
-    flagMat(i).Flag = flagMat(i).Flag(sortInd);
-    
-end
-
-
-save(fullfile(labDir,'FlagMat'),'flagMat','-v7.3');
+%         if a==1
+%             flagMat(i).Flag = repmat(1,size(data(i).BinTimes,1),1);
+%         else
+%             flagMat(i).Flag = repmat(0,size(data(i).BinTimes,1),1);
+%         end
+%         
+%     elseif a==2
+%         b = 1;
+%         indVec = [];
+%         while b==1
+%             c = [];
+%             fprintf('Double click single bin or click first and last of a range of bins to flag:\n');
+%             binSelect = ginput(2);
+%             sorted_ind = round(binSelect(1,1)):round(binSelect(2,1));
+%             ind = I(sorted_ind); % go from indices of bins sorted by prob back to indices of bins in "data" matrix
+%             [Lia, Locb] = ismember(ind,indVec);
+%             if sum(Lia)>=1
+%                 fprintf('WARNING: Some or all of the selected bin(s) already have flags which will be overwritten\n');
+%                 indVec(Locb) = [];
+%                 flagMat(i).BinTimes(Locb) = [];
+%                 flagMat(i).Probs(Locb) = [];
+%                 flagMat(i).WhichCell(Locb) = [];
+%                 flagMat(i).File(Locb) = [];
+%                 flagMat(i).Flag(Locb) = [];
+%             end
+%             indVec = [indVec,ind'];
+%             
+%             while isempty(c)
+%                 c = input('Enter 1 to keep, 0 to discard label(s) for this selection: ');
+%             end
+%             flagMat(i).CT = data(i).CT;
+%             flagMat(i).BinTimes = [flagMat(i).BinTimes; data(i).BinTimes(ind)];
+%             flagMat(i).Probs = [flagMat(i).Probs;data(i).Probs(ind)];
+%             flagMat(i).WhichCell = [flagMat(i).WhichCell; data(i).WhichCell(ind)];
+%             flagMat(i).File = [flagMat(i).File; data(i).File(ind)];
+%             if c==1
+%                 flagMat(i).Flag = [flagMat(i).Flag; repmat(1,size(data(i).BinTimes(ind),1),1)];
+%             elseif c==0
+%                 flagMat(i).Flag = [flagMat(i).Flag; repmat(0,size(data(i).BinTimes(ind),1),1)];
+%             end
+%             b = [];
+%             while isempty(b)
+%                 b = input('Make another selection? Enter 1 for "yes", 0 for "no": ');
+%             end
+%         end
+%         
+%         d = [];
+%         while isempty(d)
+%             d = input('Keep or discard remaining bin labels for this CT? Enter 1 for "keep", 0 for "discard": ');
+%         end
+%         
+%         remInd = setdiff(1:size(data(i).BinTimes,1),indVec);
+%         flagMat(i).BinTimes = [flagMat(i).BinTimes; data(i).BinTimes(remInd)];
+%         flagMat(i).Probs = [flagMat(i).Probs;data(i).Probs(remInd)];
+%         flagMat(i).WhichCell = [flagMat(i).WhichCell; data(i).WhichCell(remInd)];
+%         flagMat(i).File = [flagMat(i).File; data(i).File(remInd)];
+%         flagMat(i).Flag = [flagMat(i).Flag; repmat(d,size(remInd,2),1)];
+%     end
+%     
+%     % Put bins back in chronological order
+%     [B, sortInd] = sortrows(flagMat(i).BinTimes);
+%     flagMat(i).BinTimes = flagMat(i).BinTimes(sortInd);
+%     flagMat(i).Probs = flagMat(i).Probs(sortInd);
+%     flagMat(i).WhichCell = flagMat(i).WhichCell(sortInd);
+%     flagMat(i).File = flagMat(i).File(sortInd);
+%     flagMat(i).Flag = flagMat(i).Flag(sortInd);
+%     
+% end
+% 
+% save(fullfile(labDir,'FlagMat'),'flagMat','-v7.3');
 
 %% Construct labFlag files corresponding to each predLabels file based on flagMat
 
@@ -167,8 +176,6 @@ for iA = 1:length(clasFiles) %for each toClassify file
     
     % add flags into labFlag matrix of all bin times in this file
     labFlag = sumTimeMat(:,1);
-%     [C, ia, ib] = intersect(thisFileTimes, labFlag); 
-    
     for iB = 1:length(thisFileTimes) % possible to vectorize this?
        
         q = find(labFlag == thisFileTimes(iB));

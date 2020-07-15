@@ -74,7 +74,7 @@ model.fit(x_train, y_train,
 #           epochs=20, shuffle = True,
 #           batch_size = batch_size)
 
-print("\nValidating ...")
+print("\nTesting")
 score, accuracy = model.evaluate(x_test, y_test, batch_size=batch_size, verbose=1)
 print("Dev loss:  ", score)
 print("Dev accuracy:  ", accuracy)

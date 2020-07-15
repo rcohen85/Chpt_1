@@ -1,25 +1,47 @@
-% Load cluster bins and labels from multiple sites, organize by NNet label,
-% and plot concatenated bins by label
+%% Load cluster bins and labels, organize by NNet label, and plot 
+% concatenated bins by label. Requires toClassify files and predLab output
+% from neural net. 
+% Output: "data" struct has as many rows as NNet labels, and these fields:
+% BinTimes - start times of bins with each label
+% BinSpecs - mean bin spectra 
+% ICI - ICI distributions 
+% Env - mean waveform envelopes
+% File - cluster/toClassify/predLab file each bin comes from
+% WhichCell - which mean spectra within the cell was this label applied to
+% Probs - label confidence
 
 clearvars
 % directory containing toClassify files
 binDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
+clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
 labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
-NNlab = 0:21; % neural net labels
+NNlab = 0:21; % neural net label values
+% directory to save "data" matrix and plots
 savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
-clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
-saveName = 'HAT_B_01-03_BinsbyLabel';
-labelThresh = 0.97;
-specInd = 1:188;
-iciInd = 190:290;
-envInd = (292:491);
+saveName = 'HAT_B_01-03_BinsbyLabel'; % for "data" matrix
+
+labelThresh = 0.97; % only labels exceeding this confidence thresh will be saved and plotted
+specInd = 1:188; % indices of spectra in toClassify files
+iciInd = 190:290; % indices of ICI dists in toClassify files
+envInd = (292:491); % indices of mean waveform envelopes in toClassify files
+f = 5:0.5:98.5; % freq vector corresponding to spectra
+t = 0:.01:1; % time vector corresponding to ICI distributions
+
+% Label names for titling plots
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
     'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
     'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
     'Spiky Sonar','True''s','Wideband Sonar'};
+% Label names for saving plots; in numeric order (1:n), can't have
+% forbidden characters like + or /)
+savname = {'Blainvilles','Boats','CT11','CT2_CT9','CT3_CT7','CT4_6C_T10',...
+    'CT5','CT8','Cuviers','Gervais','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
+    'Kogia','MFA','MultiFreq Sonar','Rissos','Sowerbys','Sperm Whale',...
+    'Spiky Sonar','Trues','Wideband Sonar'};
 
-%%
+%% 
+
 binFiles = dir(fullfile(binDir,'*toClassify.mat'));
 labFiles = dir(fullfile(labDir,'*predLab.mat'));
 nFiles = size(binFiles,1);
@@ -89,64 +111,23 @@ end
 
 save(fullfile(savDir, saveName),'data','-v7.3');
 
-%% Plotting concatenated spectra
-% clearvars
-% cd('G:\New_Atl_CTs\CatSpecs');
-N = length(CTs); % number of labels
-% Names for NNet labels, in numeric order (0:N-1); for plot titles
-CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
-    'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
-    'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
-    'Spiky Sonar','True''s','Wideband Sonar'};
-% Names for labels, in numeric order (1:n); for saving plots
-savname = {'Blainvilles','Boats','CT11','CT2_CT9','CT3_CT7','CT4_6C_T10',...
-    'CT5','CT8','Cuviers','Gervais','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
-    'Kogia','MFA','MultiFreq Sonar','Rissos','Sowerbys','Sperm Whale',...
-    'Spiky Sonar','Trues','Wideband Sonar'};
-f = 5:0.5:98.5;
+%% Plot concatenated spectra for each label
 
-% Load files containing bin spectra with their corresponding labels
-% HAT = load('HAT');
-% WAT = load('WAT');
-% NFC = load('NFC');
-% JAX = load('JAX');
+N = length(CTs); % number of labels
 
 for i = 1:N
     
-%     w = WAT.data(i).BinSpecs;
-%     n = NFC.data(i).BinSpecs;
-%     h = HAT.data(i).BinSpecs;
-%     j = JAX.data(i).BinSpecs;
-%     
-%     catSpecs = [w;n;h;j];
-      catSpecs = vertcat(data(i).BinSpecs);
-%     
-%     wICI = WAT.data(i).ICI;
-%     nICI = NFC.data(i).ICI;
-%     hICI = HAT.data(i).ICI;
-%     jICI = JAX.data(i).ICI;
-    
-%     ICI = [wICI;nICI;hICI;jICI];
+    catSpecs = vertcat(data(i).BinSpecs);
     ICI = vertcat(data(i).ICI);
     meanICI = mean(ICI,1);
-    t = 0:.01:1;
-    
-%     k = [size(w,1), size(w,1) + size(n,1), size(w,1) + size(n,1) + size(h,1)];
-    
+        
     figure(1)
     subplot(1,4,1:3)
     imagesc([],f,catSpecs');
     set(gca,'ydir','normal');
     colormap(jet);
-%     for y = 1:length(k)
-%         line(repmat(k(y),length(f),1),f,'Color','k','LineWidth',3);
-%         line(repmat(k(y),length(f),1),f,'LineStyle','--','Color','w','LineWidth',3);
-%     end
     ylabel('Frequency (kHz)');
     xlabel('Bin Number');
-%     xticks([(size(w,1)/2), size(w,1) + (size(n,1)/2), size(w,1) + size(n,1)...
-%         + (size(h,1)/2), size(w,1) + size(n,1) + size(h,1) + (size(j,1)/2)]);
-%     xticklabels({'WAT','NFC','HAT','JAX'});
     title(CTs{i});
     set(gca,'fontSize',14);
     subplot(1,4,4)
@@ -159,10 +140,84 @@ for i = 1:N
     
     fprintf('Click figure for next plot\n');
     w = waitforbuttonpress; %uncomment if you want to click to step
-    %    through plots
+    %    through plots as they're generated
     
     saveas(gcf,fullfile(savDir,savname{i}),'tiff');
+end
+
+%% Old plotting code
+% clearvars
+% cd('G:\New_Atl_CTs\CatSpecs');
+% N = length(CTs); % number of labels
+% % Names for NNet labels, in numeric order (0:N-1); for plot titles
+% CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
+%     'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
+%     'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
+%     'Spiky Sonar','True''s','Wideband Sonar'};
+% % Names for labels, in numeric order (1:n); for saving plots (can't have
+% % forbidden characters like + or /)
+% savname = {'Blainvilles','Boats','CT11','CT2_CT9','CT3_CT7','CT4_6C_T10',...
+%     'CT5','CT8','Cuviers','Gervais','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
+%     'Kogia','MFA','MultiFreq Sonar','Rissos','Sowerbys','Sperm Whale',...
+%     'Spiky Sonar','Trues','Wideband Sonar'};
+% f = 5:0.5:98.5;
+% 
+% % Load files containing bin spectra with their corresponding labels
+% HAT = load('HAT');
+% WAT = load('WAT');
+% NFC = load('NFC');
+% JAX = load('JAX');
+% 
+% for i = 1:N
+%     
+%     w = WAT.data(i).BinSpecs;
+%     n = NFC.data(i).BinSpecs;
+%     h = HAT.data(i).BinSpecs;
+%     j = JAX.data(i).BinSpecs;
+%     
+%     catSpecs = [w;n;h;j];
+%     
+%     wICI = WAT.data(i).ICI;
+%     nICI = NFC.data(i).ICI;
+%     hICI = HAT.data(i).ICI;
+%     jICI = JAX.data(i).ICI;
+%     
+%     ICI = [wICI;nICI;hICI;jICI];
+%     meanICI = mean(ICI,1);
+%     t = 0:.01:0.6;
+%     
+%     k = [size(w,1), size(w,1) + size(n,1), size(w,1) + size(n,1) + size(h,1)];
+%     
+%     figure(1)
+%     subplot(1,4,1:3)
+%     imagesc([],f,catSpecs');
+%     set(gca,'ydir','normal');
+%     colormap(jet);
+%     for y = 1:length(k)
+%         line(repmat(k(y),length(f),1),f,'Color','k','LineWidth',3);
+%         line(repmat(k(y),length(f),1),f,'LineStyle','--','Color','w','LineWidth',3);
+%     end
+%     ylabel('Frequency (kHz)');
+%     xlabel('Bin Number');
+%     xticks([(size(w,1)/2), size(w,1) + (size(n,1)/2), size(w,1) + size(n,1)...
+%         + (size(h,1)/2), size(w,1) + size(n,1) + size(h,1) + (size(j,1)/2)]);
+%     xticklabels({'WAT','NFC','HAT','JAX'});
+%     title(CTs{i});
+%     set(gca,'fontSize',14);
+%     subplot(1,4,4)
+%     plot(t,meanICI,'LineWidth',2);
+%     grid on
+%     xticks([0 0.25 0.5 0.75 1]);
+%     xlabel('ICI (s)');
+%     ylabel('Normalized Counts');
+%     set(gca,'fontSize',14);
+%     
+%     fprintf('Click figure for next plot\n');
+%     w = waitforbuttonpress; %uncomment if you want to click to step
+%        through plots
+%     
+%     saveas(gcf,fullfile(savDir,savname{i}),'tiff');
 %     w = [];
 %     n = [];
 %     h = [];
-end
+% end
