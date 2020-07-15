@@ -1,14 +1,16 @@
 %% Load cluster bins and labels, organize by NNet label, and plot 
 % concatenated bins by label. Requires toClassify files and predLab output
 % from neural net. 
-% Output: "data" struct has as many rows as NNet labels, and these fields:
-% BinTimes - start times of bins with each label
+% OUTPUT: "data" struct has as many rows as NNet labels, and these fields:
+% BinTimes - start times of bins to which each (retained) label was applied
 % BinSpecs - mean bin spectra 
 % ICI - ICI distributions 
 % Env - mean waveform envelopes
 % File - cluster/toClassify/predLab file each bin comes from
 % WhichCell - which mean spectra within the cell was this label applied to
 % Probs - label confidence
+% NOTE: single click bins and spectra whose label confidence < labelThresh
+% are excluded from the "data" struct
 
 clearvars
 % directory containing toClassify files
@@ -17,9 +19,9 @@ clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
 labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
 NNlab = 0:21; % neural net label values
-% directory to save "data" matrix and plots
+% directory to save "data" struct and plots
 savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'HAT_B_01-03_BinsbyLabel'; % for "data" matrix
+saveName = 'HAT_B_01-03_BinsbyLabel'; % for "data" struct
 
 labelThresh = 0.97; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
@@ -47,7 +49,7 @@ labFiles = dir(fullfile(labDir,'*predLab.mat'));
 nFiles = size(binFiles,1);
 nn = length(NNlab);
 
-% initialize matrix to hold spectra, times, and deployment info
+% initialize struct to hold spectra, times, and deployment info
 data = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
     'Env',[],'File',[],'WhichCell',[],'Probs',[]);
 for i = 1:nn
