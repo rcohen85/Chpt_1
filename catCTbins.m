@@ -1,4 +1,4 @@
-%% Load cluster bins and labels, organize by NNet label, and plot 
+%% Load toClassify files and labels, organize by NNet label, and plot 
 % concatenated bins by label. Requires toClassify files and predLab output
 % from neural net. 
 % OUTPUT: "data" struct has as many rows as NNet labels, and these fields:
@@ -15,13 +15,13 @@
 clearvars
 % directory containing toClassify files
 binDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
-clusterSuffix = '_clusters_PR95_PPmin120_toClassify.mat';
+suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
 labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
 NNlab = 0:21; % neural net label values
 % directory to save "data" struct and plots
 savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'HAT_B_01-03_BinsbyLabel'; % for "data" struct
+saveName = 'HAT_B_01-03_BinsbyLabel'; % file name for saving "data" struct
 
 labelThresh = 0.97; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
@@ -30,26 +30,28 @@ envInd = (292:491); % indices of mean waveform envelopes in toClassify files
 f = 5:0.5:98.5; % freq vector corresponding to spectra
 t = 0:.01:1; % time vector corresponding to ICI distributions
 
-% Label names for titling plots
+% Label names for titling plots; same order as NNlab above
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
     'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
     'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
     'Spiky Sonar','True''s','Wideband Sonar'};
-% Label names for saving plots; in numeric order (1:n), can't have
-% forbidden characters like + or /)
+% Label names for saving plots; same order as NNlab above; can't have
+% forbidden characters like + or /
 savname = {'Blainvilles','Boats','CT11','CT2_CT9','CT3_CT7','CT4_6C_T10',...
     'CT5','CT8','Cuviers','Gervais','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
     'Kogia','MFA','MultiFreq Sonar','Rissos','Sowerbys','Sperm Whale',...
     'Spiky Sonar','Trues','Wideband Sonar'};
 
-%% 
+%% Organize all labeled spectra into one big array
 
 binFiles = dir(fullfile(binDir,'*toClassify.mat'));
 labFiles = dir(fullfile(labDir,'*predLab.mat'));
 nFiles = size(binFiles,1);
 nn = length(NNlab);
 
-% initialize struct to hold spectra, times, and deployment info
+% initialize struct to hold bin times, spectra, ICI dists, mean waveform 
+% envelopes, cell each spectrum occupies in cluster_bins output, 
+% label confidence, and deployment info, etc.
 data = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
     'Env',[],'File',[],'WhichCell',[],'Probs',[]);
 for i = 1:nn
@@ -57,14 +59,14 @@ for i = 1:nn
     data(i).NNet_Lab = NNlab(i);
 end
 
-% load one cluster & corresponding label file at a time, pull out spectra,
-% bin start times, and bin ICI dist for each NNet label
+% load one cluster & corresponding label file at a time, pull out desired
+% info for each NNet label
 for i=1:nFiles
     load(fullfile(binDir, binFiles(i).name));
     load(fullfile(labDir, labFiles(i).name));
     
     stringGrab = binFiles(i).name;
-    stringGrab = erase(stringGrab,clusterSuffix);
+    stringGrab = erase(stringGrab,suffix);
     
     for j=1:nn
         % find bins labeled with target label, with prob > labelThresh
@@ -82,7 +84,7 @@ for i=1:nFiles
                 labCell = whichCell(labInd);
                 labProbs = probs(labInd,j);
             else
-                fprintf('Error: Don''t recognize cluster variable names\n');
+                fprintf('Error: Don''t recognize variable names\n');
                 return
             end
             
@@ -99,7 +101,7 @@ for i=1:nFiles
     fprintf('Done with file %d of %d\n',i,nFiles);
 end
 
-% Sort bins into chronological order
+% Sort bins into chronological order within each label
 for j = 1:nn
 [B, sortInd] = sortrows(data(j).BinTimes);
 data(j).BinTimes = data(j).BinTimes(sortInd);
