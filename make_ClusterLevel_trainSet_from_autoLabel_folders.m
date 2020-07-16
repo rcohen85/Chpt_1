@@ -53,6 +53,8 @@ end
 
 myTypeList = {typeList(:).name}';
 
+save(fullfile(outDir,'MergedTypes'),'mergedTypes','myTypeList');
+
 %% select examples of each type for testSet and trainSet
 testLabelSet = [];
 testMSPSet = [];
