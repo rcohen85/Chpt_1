@@ -1,17 +1,21 @@
 clearvars
-binClustDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB'; % directory of cluster_bins output
-binClustFList = dir(fullfile(binClustDir,'*.mat'));
+binClustDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB'; % directory of cluster_bins output
 baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp'; % directory of training folders
+labelDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify\labels2'; % directory of labels
+TPWSDir = 'F:\NFC_A_03\TPWS'; % directory of TPWS files
+CpB_saveName = 'NFC_A_03_CpB_97'; % name to save Counts per Bin matrix
 
-labelDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2'; % directory of labels
-TPWSDir = 'F:\HAT_B_01-03\TPWS'; % directory of TPWS files
+minCounts = 50; % minimum counts required to consider labels, should be higher for dolphin than bw
+labelThresh = 0.97; % predction confidence threshold to be met in order for labels to be retained
+falseIdx = []; % anything matching these labels will be labeled as false and
+% saved in as zFD in FD1 files
+
+binClustFList = dir(fullfile(binClustDir,'*.mat'));
 TPWSFlist = dir(fullfile(TPWSDir,'\*TPWS1.mat'));
 saveDir = fullfile(TPWSDir,'zID');
 if ~isdir(saveDir)
     mkdir(saveDir)
 end  
-minCounts = 50; % minimum counts required to consider labels, should be higher for dolphin than bw
-labelThresh = 0.97; % predction confidence threshold to be met in order for labels to be retained
 countsPerBinAll = [];
 binTimesAll = [];
 
@@ -19,19 +23,15 @@ typeList = dir(baseDir);
 typeList = typeList(3:end);
 typeList = typeList(vertcat(typeList.isdir));
 
-%%% Modify to determine which types are labeled as false, vs. given an ID
-%%% number
-% falseIdx = []; % anything matching these NNet labels will be labeled as false.
-% ** NNet labels start from 0, not 1 **
-% idReducer = [1:8,NaN,10,NaN,12:13,NaN,15:19]; % This list should be the same
-% length as typeList, where NaNs are in the false rows, and numbers are in
-% the other rows, to assign colors. This is the hardest part to understand,
-% ask me for clarification.
-%%%
+legend = struct('Name',[],'zID_Label',[]);
+for i = 1:length(typeList)
+legend(i).Name = typeList(i).name;
+legend(i).zID_Label = i;
+end
 
 %%
-totBins = 0; 
-labeledBins = 0; 
+totBinSpecs = 0; 
+labeledBinSpecs = 0; 
 totClicks = 0; 
 labeledClicks = 0;
 
@@ -50,7 +50,7 @@ for iFile = 1:length(binClustFList)
     
     % load labels (and flags, if they exist)
     labelName = strrep(TPWSName,'TPWS1','clusters_PR95_PPmin120_predLab');
-    flagName = strrep(labelName,'predLab','labFlag_85');
+    flagName = strrep(labelName,'predLab','labFlag*');
     zIDName = strrep(TPWSName,'TPWS1','ID1');
     zFDName = strrep(TPWSName,'TPWS1','FD1');  
     
@@ -59,7 +59,7 @@ for iFile = 1:length(binClustFList)
         load(fullfile(labelDir,flagName))
     end
     probs = double(probs); 
-    predLabels = predLabels'+1;
+    predLabels = predLabels'+1; % neural net labels start at 0, add 1 to prevent issues in detEdit
     
     countsPerBin = zeros(length(binData),length(typeList)+1);
     count = 1; % index to keep track of which label corresponds to which mean spectrum (some bins unlabeled bc single click bins not include in toClassify)
@@ -136,27 +136,36 @@ for iFile = 1:length(binClustFList)
     
     zID = sortrows(zID);
     
-%     falseLabels = sum(bsxfun(@eq,zID(:,2),falseIdx),2)>0;
-%     zFD = zID(falseLabels,1);
-%     zID = zID(~falseLabels,:);
+    if ~isempty(falseIdx)
+        falseLabels = sum(bsxfun(@eq,zID(:,2),falseIdx),2)>0;
+        zFD = zID(falseLabels,1);
+        zID = zID(~falseLabels,:);
+        save(fullfile(saveDir,zFDName),'zFD')
+    end
     
-    save(fullfile(saveDir,zIDName),'zID')
-%     save(fullfile(saveDir,zFDName),'zFD')
-    
+    save(fullfile(saveDir,zIDName),'zID','legend','labelThresh','minCounts')
+
+    % running tallies to calculate proportions of bins/clicks that end up
+    % with labels
     countsPerBinAll = [countsPerBinAll;countsPerBin];
     tTemp = vertcat(binData.tInt);
     binTimesAll = [binTimesAll;tTemp(:,1)];
      
-    totBins = totBins + size(horzcat(binData.nSpec),2);
-    labeledBins = labeledBins + length(predLabels);
+    totBinSpecs = totBinSpecs + size(horzcat(binData.nSpec),2);
+    if exist('labFlag')
+        labeledBinSpecs = labeledBinSpecs + sum(labFlag(:,2));
+    else
+        aboveThreshLabels = length(find(max(probs,[],2)>=labelThresh));
+        labeledBinSpecs = labeledBinSpecs + aboveThreshLabels;
+    end    
     totClicks = totClicks + length(MTT);
-    labeledClicks = labeledClicks + length(zID(zID(:,2)~=length(typeList)));
+    labeledClicks = labeledClicks + length(zID(zID(:,2)~=length(typeList)+1));
     
     fprintf('Done with file %d of %d\n',iFile,length(binClustFList))
 end
 %%
-propBinsLabeled = labeledBins/totBins;
+propBinSpecsLabeled = labeledBinSpecs/totBinSpecs;
 propClicksLabeled = labeledClicks/totClicks;
 
-save(fullfile(labelDir,strrep(zIDName,'.mat','_CpB.mat')),'countsPerBinAll',...
-    'binTimesAll','propBinsLabeled','propClicksLabeled','labelThresh');
+save(fullfile(labelDir,CpB_saveName),'countsPerBinAll',...
+    'binTimesAll','propBinSpecsLabeled','propClicksLabeled','labelThresh');
