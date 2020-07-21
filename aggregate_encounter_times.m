@@ -1,16 +1,32 @@
 % Looks at binned labeled click data output by bin_labeled_clicks and
 % determines start/end times of encounters with each label
 % inDir - directory containing binned_labels files
-% binSize - bin duration in minutes
-% maxGap - maximum alloweable gap between clicks to consider them part of
-% the same encounter
-% minBout - minimum duration of an encounter
+% binSize - bin duration IN MINUTES; should be same as in bin_labeled_clicks
+% maxGap - maximum allowable time gap between clicks (IN MINUTES) to consider 
+% them part of the same encounter
+% minBout - minimum duration of an encounter IN MINUTES
+%
+% OUTPUT: a struct, boutTimes, with the following fields:
+% ClickType
+% NumBouts
+% BoutStarts
+% BoutEnds
+% BoutDurs
+% WhichFile
+% Also a struct, p, containing the input arguments
+
 
 function boutTimes = aggregate_encounter_times(inDir,binSize,maxGap,minBout)
 
 fileList = dir(fullfile(inDir,'*binned_labels*.mat'));
 boutTimes = struct('ClickType',[],'NumBouts',{},'BoutStarts',[],...
         'BoutEnds',[],'BoutDurs',[],'WhichFile',{});
+    
+% Create parameter struct to be saved with output
+p.inDir = inDir;
+p.binSize = binSize;
+p.maxGap = maxGap;
+p.minBout = minBout;
     
 for iA = 1:length(fileList)
     
@@ -71,5 +87,5 @@ for iA = 1:length(fileList)
     fprintf('Done with file %d of %d\n',iA,length(fileList));
 end
     outName = 'BoutTimes';
-    save(fullfile(inDir,outName),'boutTimes');
+    save(fullfile(inDir,outName),'boutTimes','p');
 end

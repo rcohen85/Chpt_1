@@ -6,8 +6,8 @@
 % which first column is the name of each click type/species, and the second
 % column is the number label used to identify that click type/species in the ID1 file
 % binSize - desired time bin duration IN MINUTES
-% minClicks (can be left empty) - minimum number of clicks in a bin for a 
-% mean spectrum & ICI to be calculated; Nx1 vector
+% minClicks - minimum number of clicks in a bin for a mean spectrum & ICI 
+% to be calculated; a scalar or an Nx1 vector; default is 50 clicks
 % minPP - minimum peak-to-peak amplitude required to retain clicks
 % saveSuffix - string to append to end of binned_clicks file names indicating
 % binSize and/or minClicks and/or minPP; e.g. '5min'
@@ -19,6 +19,7 @@
 % ICI_dists - ICI distributions of clicks corresponding to each mean spec
 % EnvShape - mean waveform envelope of clicks corresponding to each mean spec
 % ClickTimes - times of clicks corresponding to each mean spec
+% Also a struct, p, containing the input arguments (except saveSuffix)
 
 function [binned_labels] = bin_labeled_clicks(inDir,outDir,Labels,binSize,minClicks,minPP,saveSuffix)
 
@@ -30,7 +31,6 @@ if isempty(Labels)
 
 end
 if isempty(minClicks)
-    %minClicks = [15,15,15,15,15,15,15,15,10,5,10,5,10,15,5,15,10,8,10,10];
     minClicks = 50;
 end
 
