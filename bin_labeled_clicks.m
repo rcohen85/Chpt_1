@@ -5,7 +5,7 @@
 % Labels (can be left empty if the one below is correct) - Nx2 cell array in 
 % which first column is the name of each click type/species, and the second
 % column is the number label used to identify that click type/species in the ID1 file
-% binSize - desired time bin duration in minutes
+% binSize - desired time bin duration IN MINUTES
 % minClicks (can be left empty) - minimum number of clicks in a bin for a 
 % mean spectrum & ICI to be calculated; Nx1 vector
 % minPP - minimum peak-to-peak amplitude required to retain clicks
