@@ -28,7 +28,8 @@ for i = 1:length(typeList)
 legend(i).Name = typeList(i).name;
 legend(i).zID_Label = i;
 end
-
+legend(i+1).Name = 'Unidentified';
+legend(i+1).zID_Label = length(typeList)+1;
 %%
 totBinSpecs = 0; 
 labeledBinSpecs = 0; 
