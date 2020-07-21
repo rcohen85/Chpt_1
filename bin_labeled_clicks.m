@@ -2,19 +2,32 @@
 % calculate mean spectra and ICI dist per bin
 % inDir - directory containing TPWS and associated ID1 files
 % outDir - directory to save binned_labels output
-% Labels (can be left empty) - Nx2 cell array in which first column is the 
-% name of each click type/species, and the second column is the number label
-% used to identify that click type/species in the ID1 file
+% Labels (can be left empty if the one below is correct) - Nx2 cell array in 
+% which first column is the name of each click type/species, and the second
+% column is the number label used to identify that click type/species in the ID1 file
 % binSize - desired time bin duration in minutes
 % minClicks (can be left empty) - minimum number of clicks in a bin for a 
 % mean spectrum & ICI to be calculated; Nx1 vector
 % minPP - minimum peak-to-peak amplitude required to retain clicks
+% saveSuffix - string to append to end of binned_clicks file names indicating
+% binSize and/or minClicks and/or minPP; e.g. '5min'
+%
+% OUTPUT: a binned_clicks file corresponding to each TPWS and ID1 file
+% containing a binned_labels struct with the following fields:
+% BinTimes - start times of bins
+% BinSpecs - mean spectra for all click types in each bin
+% ICI_dists - ICI distributions of clicks corresponding to each mean spec
+% EnvShape - mean waveform envelope of clicks corresponding to each mean spec
+% ClickTimes - times of clicks corresponding to each mean spec
+
 function [binned_labels] = bin_labeled_clicks(inDir,outDir,Labels,binSize,minClicks,minPP,saveSuffix)
 
 if isempty(Labels)
-    Labels = {'Blainvilles',0;'Boats',1;'CT11',2;'CT2+CT9',3;'CT3+CT7',4;'CT4_6+CT10',5;'CT5',6;...
-        'CT8',7;'Cuviers',8;'Gervais',9;'Kogia',10;'Rissos',11;...
-        'Sonar',12;'Sowerby',13;'Sperm',14;'True',15;'Unidentified',16};
+    Labels = {'Blainvilles',1;'Boats',2;'CT11',3;'CT2+CT9',4;'CT3+CT7',5;'CT4/6+CT10',6;...
+    'CT5',7;'CT8',8;'Cuviers',9;'Gervais',10;'HFA_15kHz',11;'HFA_50kHz',12;'HFA_70kHz',13;...
+    'Kogia',14;'MFA',15;'MultiFreq_Sonar',16;'Rissos',17;'Sowerbys',18;'Sperm Whale',19;...
+    'Spiky_Sonar',20;'Trues',21;'Wideband_Sonar',22};
+
 end
 if isempty(minClicks)
     %minClicks = [15,15,15,15,15,15,15,15,10,5,10,5,10,15,5,15,10,8,10,10];
