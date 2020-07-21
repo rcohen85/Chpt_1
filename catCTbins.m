@@ -14,14 +14,14 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
+labDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify\labels2';
 NNlab = 0:21; % neural net label values
 % directory to save "data" struct and plots
-savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'HAT_B_01-03_BinsbyLabel'; % file name for saving "data" struct
+savDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify\labels2';
+saveName = 'NFC_A_03_BinsbyLabel_Thresh97'; % file name for saving "data" struct
 
 labelThresh = 0.97; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
@@ -113,7 +113,7 @@ data(j).WhichCell = data(j).WhichCell(sortInd);
 data(j).Probs = data(j).Probs(sortInd);
 end
 
-save(fullfile(savDir, saveName),'data','-v7.3');
+save(fullfile(savDir, saveName),'data','labelThresh','f','t','-v7.3');
 
 %% Plot concatenated spectra for each label
 
