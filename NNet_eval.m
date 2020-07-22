@@ -2,19 +2,18 @@
 % Load NNet test data and output predicted labels
 clearvars
 
-baseDir = 'G:\cluster_NNet\TrainTest';
-load(fullfile(baseDir,'TestSet_MSPICIWV_NewSonar_500.mat')); % update name of testing data file
+baseDir = 'I:\cluster_NNet\TrainTest';
+load(fullfile(baseDir,'TestSet_MSPICIWV_500_noReps.mat')); % update name of testing data file
 q = 500; % # test examples per class
-testDir = fullfile(baseDir,'20200708-123749'); % update folder where NNet output was saved
+testDir = fullfile(baseDir,'20200721-155130'); % update folder where NNet output was saved
 cd(testDir);
 load('TestOutput')
 testOut = testOut+1;
 f = 5.5:0.5:99;
 %labels = [1:9,11,13,14,16:19];
 types = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4\6+CT10','CT5',...
-    'CT8','Cuvier''s','Gervais''','HFA\_15kHz','HFA\_50kHz','HFA\_70kHz',...
-    'Kogia','MFA','MultiFreq\_Sonar','Risso''s','Sowerby''s','SpermWhale',...
-    'Spiky\_Sonar','True''s','Wideband\_Sonar'};
+    'CT8','Cuvier''s','Gervais''','GoM\_Gervais','HFA','Kogia','MFA',...
+    'MultiFreq\_Sonar','Risso''s','SnapShrimp','Sowerby''s','SpermWhale','True''s'};
 
 
 
@@ -27,7 +26,7 @@ C = array2table(C,'VariableNames',{'TrueClass','Predicted_1','Predicted_2',...
     'Predicted_3','Predicted_4','Predicted_5','Predicted_6','Predicted_7',...
     'Predicted_8','Predicted_9','Predicted_10','Predicted_11','Predicted_12',...
     'Predicted_13','Predicted_14','Predicted_15','Predicted_16','Predicted_17'...
-    'Predicted_18','Predicted_19','Predicted_20','Predicted_21','Predicted_22'});
+    'Predicted_18','Predicted_19','Predicted_20'});
 
 writetable(C,fullfile(testDir,'ConfusionMatrix.csv'));
 

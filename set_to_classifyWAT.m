@@ -1,5 +1,5 @@
 clearvars;
-inDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB';
+inDir = 'G:\USWTR02B\NEW_ClusterBins_120dB';
 fList = dir(fullfile(inDir,'*clusters*.mat'));
 if ~isdir(fullfile(inDir,'ToClassify'))
     mkdir(fullfile(inDir,'ToClassify'))

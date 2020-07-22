@@ -7,15 +7,15 @@
 % Update this section for each new test output and each class you wish to
 % consider
 
-baseDir = 'G:\cluster_NNet\TrainTest'; % folder where test set lives
-testDir = fullfile(baseDir,'20200708-123749'); % folder where nnet output lives
-load(fullfile(baseDir,'TestSet_MSPICIWV_NewSonar_500.mat')); % update name of testing data file
+baseDir = 'I:\cluster_NNet\TrainTest'; % folder where test set lives
+testDir = fullfile(baseDir,'20200721-155130'); % folder where nnet output lives
+load(fullfile(baseDir,'TestSet_MSPICIWV_500_noReps.mat')); % update name of testing data file
 load(fullfile(testDir,'TestOutput'));
 testOut = double(testOut'+1);
 
 n = 500; % number of training examples of each class
-sp = 'CT8';
-lab = 8; % label of class of interest in test label set
+sp = 'Sperm\_Whale';
+lab = 19; % label of class of interest in test label set
 
 %%
 ind = (lab-1)*n+1:lab*n; % indices of class of interest in test set

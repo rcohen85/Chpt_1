@@ -4,8 +4,8 @@ clearvars
 %%%% Paths to modify
 baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp';
 outDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp';
-test_saveFileName = 'TestSet_MSPICIWV_NewSonar_Snap_500.mat';
-train_saveFileName = 'TrainSet_MSPICIWV_NewSonar_Snap_5000.mat';
+test_saveFileName = 'TestSet_MSPICIWV_500_noReps.mat';
+train_saveFileName = 'TrainSet_MSPICIWV_5000_noReps.mat';
 %%%%
 
 %%
