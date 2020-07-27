@@ -16,7 +16,7 @@ TPWSFlist = dir(fullfile(TPWSDir,'\*TPWS1.mat'));
 saveDir = fullfile(TPWSDir,'zID_0');
 if ~isdir(saveDir)
     mkdir(saveDir)
-end  
+end
 countsPerBinAll = [];
 binTimesAll = [];
 
@@ -26,15 +26,15 @@ typeList = typeList(vertcat(typeList.isdir));
 
 legend = struct('Name',[],'zID_Label',[]);
 for i = 1:length(typeList)
-legend(i).Name = typeList(i).name;
-legend(i).zID_Label = i;
+    legend(i).Name = typeList(i).name;
+    legend(i).zID_Label = i;
 end
 legend(i+1).Name = 'Unidentified';
 legend(i+1).zID_Label = length(typeList)+1;
 %%
-totBinSpecs = 0; 
-labeledBinSpecs = 0; 
-totClicks = 0; 
+totBinSpecs = 0;
+labeledBinSpecs = 0;
+totClicks = 0;
 labeledClicks = 0;
 
 for iFile = 1:length(binClustFList)
@@ -54,13 +54,13 @@ for iFile = 1:length(binClustFList)
     labelName = strrep(TPWSName,'TPWS1','clusters_PR95_PPmin120_predLab');
     flagName = strrep(labelName,'predLab',['labFlag' flagStr]);
     zIDName = strrep(TPWSName,'TPWS1','ID1');
-    zFDName = strrep(TPWSName,'TPWS1','FD1');  
+    zFDName = strrep(TPWSName,'TPWS1','FD1');
     
     load(fullfile(labelDir,labelName))
     if exist(fullfile(labelDir,flagName))==2
         load(fullfile(labelDir,flagName))
     end
-    probs = double(probs); 
+    probs = double(probs);
     predLabels = predLabels'+1; % neural net labels start at 0, add 1 to prevent issues in detEdit
     
     countsPerBin = zeros(length(binData),length(typeList)+1);
@@ -88,9 +88,9 @@ for iFile = 1:length(binClustFList)
                     probSet(iPs) = probs(specVec(iPs),labelSet(iPs));
                 end
                 if exist('labFlag')
-                    flagSet = labFlag(count:(count+n-1),2); 
+                    flagSet = labFlag(count:(count+n-1),2);
                 end
-            end          
+            end
             
             nInSet = [];
             cTimes = {};
@@ -101,90 +101,114 @@ for iFile = 1:length(binClustFList)
             
             if minCounts>0
                 probSet(nInSet<minCounts) = NaN; % if threshold has been set, discard labels below min counts threshold
-%                 nSpecSet = nInSet(nInSet>=minCounts);
+                %                 nSpecSet = nInSet(nInSet>=minCounts);
                 if ~isempty(flagSet)
                     probSet(flagSet==0) = NaN; % discard confidences for labels flagged 0
                 end
             else
-%                 nSpecSet = nInSet;
+                %                 nSpecSet = nInSet;
                 if ~isempty(flagSet)
                     probSet(flagSet==0) = NaN; % discard confidences for labels flagged 0
                 end
             end
             
             % Determine labels for clicks in this bin:
-            if max(probSet)<labelThresh % if no strong labels, assign all clicks to "unidentified" label
+            if max(probSet)<labelThresh || (sum(isnan(probSet))==1 && length(probSet)==1) % IF NO STRONG LABELS, assign all clicks to "unidentified" label
                 nSpec = [];
-                unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes));
+                unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes{1,:}));
                 for iS = 1:length(nInSet)
                     nSpec = [nSpec;repmat(nInSet(iS),nInSet(iS),1)];
                 end
                 zID = [zID;...
-                    [vertcat(cTimes),... % times of clicks with weak label(s)
-                    double(repmat(length(typeList)+1,size(MTTIdx,1),1)),...% "unidentified" label for these clicks
-                    NaN(size(MTTIdx,1),1),... % NaN label confidence for these clicks
+                    [vertcat(cTimes{1,:}),... % times of clicks with weak label(s)
+                    double(repmat(length(typeList)+1,size(cTimes{1,:},1),1)),...% "unidentified" label for these clicks
+                    NaN(size(cTimes{1,:},1),1),... % NaN label confidence for these clicks
                     nSpec; % nSpec of weak label(s)
                     unIDtimes,... % times of isolated/unlabeled clicks
                     double(repmat(length(typeList)+1,size(unIDtimes,1),1)),... % "unidentified" label for these clicks
                     NaN(size(unIDtimes,1),1),... % NaN label confidence for these clicks
                     ones(size(unIDtimes,1),1)]]; % nSpec set to one since these clicks were never in a mean spectrum
                 countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(MTTIdx,1); % save total # clicks in this bin
-            elseif sum(probSet>=labelThresh)==1 % if only one strong label in this
-                % set, assign appropriate clicks to that label, other clicks labeled "unidentified"
-                [bestScore,bestLabelIdx] = max(probSet);
-                iDnum = labelSet(bestLabelIdx); % single strong label
-                nBestSpec = nInSet(bestLabelIdx); % number of specs under strong label
-                remSpecIdx = 1:length(probSet)
-                remSpecIdx(remSpecIdx==bestLabelIdx) = []; % indices of remaining (weak) labels
-                remSpecTimes = vertcat(cTimes{1,remSpecIdx});
-                nRemSpec = [];
-                for iS = 1:length(nInSet)
-                    if iS==bestLabelIdx
-                        continue
-                    end 
-                    nRemSpec = [nRemSpec;repmat(nInSet(iS),nInSet(iS),1)]; % number of specs under each remaining (weak) label
+            elseif sum(probSet>=labelThresh)==1 % IF ONLY ONE STRONG LABEL IN THIS SET, assign
+                % appropriate clicks to that label, other clicks labeled "unidentified"
+                if length(probSet)>1
+                    [bestScore,bestLabelIdx] = max(probSet);
+                    iDnum = labelSet(bestLabelIdx); % single strong label
+                    nBestSpec = nInSet(bestLabelIdx); % number of specs under strong label
+                    remSpecIdx = setdiff(1:length(probSet),bestLabelIdx); % indices of remaining (weak) label(s)
+                    remSpecTimes = vertcat(cTimes{1,remSpecIdx});
+                    nRemSpec = [];
+                    for iS = 1:length(nInSet)
+                        if iS==bestLabelIdx
+                            continue
+                        end
+                        nRemSpec = [nRemSpec;repmat(nInSet(iS),nInSet(iS),1)]; % number of specs under each remaining (weak) label                      
+                        countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+nInSet(iS);
+                    end                     
+                    unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes{1,:}));
+                    zID = [zID;...
+                        [cTimes{1,bestLabelIdx},... % times of clicks with strong label
+                        double(repmat(iDnum,size(cTimes{1,bestLabelIdx},1),1)),... % strong label
+                        repmat(probSet(bestLabelIdx),size(cTimes{1,bestLabelIdx},1),1),... % confidence of strong label
+                        repmat(nBestSpec,size(cTimes{1,bestLabelIdx},1),1);... % nSpec of strong label
+                        remSpecTimes,... % click times of remaining (weak) labels
+                        double(repmat(length(typeList)+1,size(remSpecTimes,1),1)),... % "unidentified" label for these clicks
+                        NaN(size(remSpecTimes,1),1),... % NaN label confidence for these clicks
+                        nRemSpec;... % nSpec of weak labels
+                        unIDtimes,... % times of isolated/unlabeled clicks
+                        double(repmat(length(typeList)+1,size(unIDtimes,1),1)),... % "unidentified" label for these clicks
+                        NaN(size(unIDtimes,1),1),... % NaN label confidence for these clicks
+                        ones(size(unIDtimes,1),1)]]; % nSpec set to one since these clicks were never in a mean spectrum
+                    countsPerBin(iC,iDnum) = countsPerBin(iC,iDnum)+nBestSpec;
+                    countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(unIDtimes,1);
+                else
+                    unIDtimes = setdiff(MTT(MTTIdx),cTimes{1,1});
+                    zID = [zID;...
+                        [cTimes{1,1},... % times of clicks with strong label
+                        double(repmat(labelSet(1),size(cTimes{1,1},1),1)),... % strong label
+                        repmat(probSet(1),size(cTimes{1,1},1),1),... % confidence of strong label
+                        repmat(nInSet,size(cTimes{1,1},1),1);... % nSpec of strong label
+                        unIDtimes,... % times of isolated/unlabeled clicks
+                        double(repmat(length(typeList)+1,size(unIDtimes,1),1)),... % "unidentified" label for these clicks
+                        NaN(size(unIDtimes,1),1),... % NaN label confidence for these clicks
+                        ones(size(unIDtimes,1),1)]]; % nSpec set to one since these clicks were never in a mean spectrum
+                    countsPerBin(iC,labelSet(1)) = countsPerBin(iC,labelSet(1))+nInSet;
+                    countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(unIDtimes,1);
                 end
-                unIDtimes = setdiff(MTT(MTTIdx),cTimes{1,bestLabelIdx});
-                countsPerBin(iC,iDnum) = countsPerBin(iC,iDnum)+...
-                    nBestSpec;
+            elseif sum(probSet>=labelThresh)> 1 % IF THERE ARE MULTIPLE STRONG OPTIONS, assign
+                % appropriate clicks to each label, other clicks labeled "unidentified"
+                posLabelsIdx = find(probSet>=labelThresh);
+                negLabelsIdx = setdiff(1:length(probSet),posLabelsIdx);
+                for uI = 1:length(probSet)
+                    if ismember(uI,posLabelsIdx)
+                        iDnum = labelSet(uI);
+                        prProb = probSet(uI);
+                        nSpec = nInSet(uI);
+                        zID = [zID;...
+                            [cTimes{1,uI},... % times of clicks with strong labels
+                            double(repmat(iDnum,size(cTimes{1,uI},1),1)),... % strong labels
+                            repmat(probSet(uI),size(cTimes{1,uI},1),1),... % confidence of strong labels
+                            repmat(nSpec,size(cTimes{1,uI},1),1)]]; %nSpec of strong labels
+                        countsPerBin(iC,iDnum) = countsPerBin(iC,iDnum)+nSpec;
+                    elseif ismember(uI,negLabelsIdx)
+                        prProb = probSet(uI);
+                        nSpec = nInSet(uI);
+                        zID = [zID;...
+                            [cTimes{1,uI},... % times of clicks with remaining (weak) labels
+                            double(repmat(length(typeList)+1,size(cTimes{1,uI},1),1)),... % "unidentified" label for these clicks
+                            NaN(size(cTimes{1,uI},1),1); % NaN label confidence for these clicks
+                            repmat(nSpec,size(cTimes{1,uI},1),1)]]; % nSpec of weak labels
+                        countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+...
+                            nInSet(posLabelsIdx(uI));
+                    end
+                end
+                unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes{1,:}));
                 zID = [zID;...
-                    [cTimes{1,bestLabelIdx},... % times of clicks with strong label
-                    double(repmat(iDnum,size(cTimes{1,bestLabelIdx},1),1)),... % strong label
-                    repmat(probSet(bestLabelIdx),size(cTimes{1,bestLabelIdx},1),1),... % confidence of strong label
-                    repmat(nBestSpec,size(cTimes{1,bestLabelIdx},1),1);... % nSpec of strong label
-                    remSpecTimes,... % click times of remaining (weak) labels
-                    double(repmat(length(typeList)+1,size(remSpecTimes,1),1)),... % "unidentified" label for these clicks
-                    NaN(size(remSpecTimes,1),1),... % NaN label confidence for these clicks
-                    nRemSpec;... % nSpec of weak labels
-                    unIDtimes,... % times of isolated/unlabeled clicks
+                    [unIDtimes,... % times of isolated/unlabeled clicks
                     double(repmat(length(typeList)+1,size(unIDtimes,1),1)),... % "unidentified" label for these clicks
                     NaN(size(unIDtimes,1),1),... % NaN label confidence for these clicks
                     ones(size(unIDtimes,1),1)]]; % nSpec set to one since these clicks were never in a mean spectrum
-                countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(unIDtimes,1);               
-            elseif sum(probSet>=labelThresh)> 1 % if there are multiple options, assign 
-                % appropriate clicks to each label, isolated clicks labeled "unidentified"
-                posLabelsIdx = find(probSet>=labelThresh);
-                highProbLabels = labelSet(posLabelsIdx);
-                prunedProbs = probSet(posLabelsIdx);
-                prunednSpec = nInSet(posLabelsIdx);
-                for uI = 1:length(highProbLabels)
-                    iDnum = highProbLabels(uI);
-                    prProb = prunednProbs(uI);
-                    nSpec = prunednSpec(uI);
-                    zID = [zID;...
-                        [cTimes{1,posLabelsIdx(uI)},...
-                        double(repmat(iDnum,size(cTimes{1,posLabelsIdx(uI)},1),1)),...
-                        repmat(nSpec,size(cTimes{1,posLabelsIdx(uI)},1),1)]];
-                    countsPerBin(iC,iDnum) = countsPerBin(iC,iDnum)+...
-                        nInSet(posLabelsIdx(uI));
-                end
-                unIDtimes = setdiff(MTT(MTTIdx),vertcat(cTimes{1,posLabelsIdx}));
-                zID = [zID;...
-                    [unIDtimes,...
-                    double(repmat(length(typeList)+1,size(unIDtimes,1),1)),...
-                    NaN(size(unIDtimes,1),1),...
-                    ones(size(unIDtimes,1),1)]];
-                countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(MTTIdx,1)-sum(nInSet);
+                countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(unIDtimes,1);
             end
             count = count+n; % advance index to first label/prob for next bin
         end
@@ -200,20 +224,20 @@ for iFile = 1:length(binClustFList)
     end
     
     save(fullfile(saveDir,zIDName),'zID','legend','labelThresh','minCounts')
-
+    
     % running tallies to calculate proportions of bins/clicks that end up
     % with labels
     countsPerBinAll = [countsPerBinAll;countsPerBin];
     tTemp = vertcat(binData.tInt);
     binTimesAll = [binTimesAll;tTemp(:,1)];
-     
+    
     totBinSpecs = totBinSpecs + size(horzcat(binData.nSpec),2);
     if exist('labFlag')
         labeledBinSpecs = labeledBinSpecs + sum(labFlag(:,2));
     else
         aboveThreshLabels = length(find(max(probs,[],2)>=labelThresh));
         labeledBinSpecs = labeledBinSpecs + aboveThreshLabels;
-    end    
+    end
     totClicks = totClicks + length(MTT);
     labeledClicks = labeledClicks + length(zID(zID(:,2)~=length(typeList)+1));
     
