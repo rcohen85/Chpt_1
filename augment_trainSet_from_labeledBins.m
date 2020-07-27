@@ -28,6 +28,8 @@ figure(1)          % plot spectra sorted by frequency
 imagesc([],f,data(type).BinSpecs(ind,:)');
 set(gca,'ydir','normal');
 
+% on plot select first and last bins of interest to be saved in new
+% thisType matrix
 binSelect = ginput(2);
 
 subInd = round(binSelect(1,1)):round(binSelect(2,1));
@@ -40,6 +42,7 @@ files = data(type).File(ind(subInd),:);
 
 check = exist(fullfile(outDir,saveName),'file');
 
+% add selected bins to existing thisType matrix, or create a new one
 if check==2
     load(fullfile(outDir,saveName));
     thisType.Tfinal{1,1} = [thisType.Tfinal{1,1};specs];
