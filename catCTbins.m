@@ -14,16 +14,16 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify\labels2';
-NNlab = 0:21; % neural net label values
+labDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels3';
+NNlab = 0:19; % neural net label values
 % directory to save "data" struct and plots
-savDir = 'F:\NFC_A_03\NEW_ClusterBins_120dB\ToClassify\labels2';
-saveName = 'NFC_A_03_BinsbyLabel_Thresh97'; % file name for saving "data" struct
+savDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels3';
+saveName = 'HAT_B_01-03_BinsbyLabel_Thresh0'; % file name for saving "data" struct
 
-labelThresh = 0.97; % only labels exceeding this confidence thresh will be saved and plotted
+labelThresh = 0; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
 iciInd = 190:290; % indices of ICI dists in toClassify files
 envInd = (292:491); % indices of mean waveform envelopes in toClassify files
@@ -32,15 +32,15 @@ t = 0:.01:1; % time vector corresponding to ICI distributions
 
 % Label names for titling plots; same order as NNlab above
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4/6+CT10',...
-    'CT5','CT8','Cuvier''s','Gervais''','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
-    'Kogia','MFA','MultiFreq Sonar','Risso''s','Sowerby''s','Sperm Whale',...
-    'Spiky Sonar','True''s','Wideband Sonar'};
+    'CT5','CT8','Cuvier''s','Gervais''','GoM\_Gervais''','HFA','Kogia',...
+    'MFA','MultiFreq\_Sonar','Risso''s','SnapShrimp','Sowerby''s',...
+    'Sperm Whale','True''s'};
 % Label names for saving plots; same order as NNlab above; can't have
 % forbidden characters like + or /
-savname = {'Blainvilles','Boats','CT11','CT2_CT9','CT3_CT7','CT4_6C_T10',...
-    'CT5','CT8','Cuviers','Gervais','HFA 15kHz','HFA 50kHz','HFA 70kHz',...
-    'Kogia','MFA','MultiFreq Sonar','Rissos','Sowerbys','Sperm Whale',...
-    'Spiky Sonar','Trues','Wideband Sonar'};
+savname = {'Blainvilles','Boats','CT11','CT2+CT9','CT3+CT7','CT4_6+CT10',...
+    'CT5','CT8','Cuviers','Gervais','GoM_Gervais','HFA','Kogia',...
+    'MFA','MultiFreq_Sonar','Rissos','SnapShrimp','Sowerbys',...
+    'Sperm Whale','Trues'};
 
 %% Organize all labeled spectra into one big array
 
@@ -53,7 +53,7 @@ nn = length(NNlab);
 % envelopes, cell each spectrum occupies in cluster_bins output, 
 % label confidence, and deployment info, etc.
 data = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
-    'Env',[],'File',[],'WhichCell',[],'Probs',[]);
+    'Env',[],'File',[],'WhichCell',[],'Probs',[],'nSpec',[]);
 for i = 1:nn
     data(i).CT = CTs{i};
     data(i).NNet_Lab = NNlab(i);
@@ -83,6 +83,7 @@ for i=1:nFiles
                 labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
                 labCell = whichCell(labInd);
                 labProbs = probs(labInd,j);
+                nSpec = nSpecMat(labInd);
             else
                 fprintf('Error: Don''t recognize variable names\n');
                 return
@@ -95,6 +96,7 @@ for i=1:nFiles
             data(j).File = [data(j).File;labFile];
             data(j).WhichCell = [data(j).WhichCell;labCell];
             data(j).Probs = [data(j).Probs;labProbs];
+            data(j).nSpec = [data(j).nSpec;nSpec];
         end
         
     end
@@ -111,6 +113,7 @@ data(j).Env = data(j).Env(sortInd,:);
 data(j).File = data(j).File(sortInd,:);
 data(j).WhichCell = data(j).WhichCell(sortInd);
 data(j).Probs = data(j).Probs(sortInd);
+data(j).nSpec = data(j).nSpec(sortInd);
 end
 
 save(fullfile(savDir, saveName),'data','labelThresh','f','t','-v7.3');
@@ -146,7 +149,7 @@ for i = 1:N
     w = waitforbuttonpress; %uncomment if you want to click to step
     %    through plots as they're generated
     
-    saveas(gcf,fullfile(savDir,savname{i}),'tiff');
+    saveas(gcf,fullfile(savDir,[savname{i} '_Thresh' num2str(labelThresh*100)]),'tiff');
 end
 
 %% Old plotting code
