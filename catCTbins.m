@@ -14,14 +14,17 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels3';
+labDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify\labels';
 NNlab = 0:19; % neural net label values
 % directory to save "data" struct and plots
-savDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels3';
-saveName = 'HAT_B_01-03_BinsbyLabel_Thresh0'; % file name for saving "data" struct
+savDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify\labels';
+saveName = 'WAT_HZ_03_BinsbyLabel_Thresh0'; % file name for saving "data" struct
+
+plotTF = 0; % set to 1 if you want to click through plots as they're generated,
+% or set to 0 to skip that (they'll still be saved)
 
 labelThresh = 0; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
@@ -145,9 +148,10 @@ for i = 1:N
     ylabel('Normalized Counts');
     set(gca,'fontSize',14);
     
+    if plotTF==1
     fprintf('Click figure for next plot\n');
-    w = waitforbuttonpress; %uncomment if you want to click to step
-    %    through plots as they're generated
+    w = waitforbuttonpress; 
+    end
     
     saveas(gcf,fullfile(savDir,[savname{i} '_Thresh' num2str(labelThresh*100)]),'tiff');
 end

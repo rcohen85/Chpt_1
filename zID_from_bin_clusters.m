@@ -1,11 +1,14 @@
+%
+
 clearvars
-binClustDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB'; % directory of cluster_bins output
 baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp'; % directory of training folders
 modDir = 'I:\cluster_NNet\TrainTest\20200721-155130\NNet.h5'; % path of trained model
-labelDir = 'F:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels3'; % directory of labels
+
+binClustDir = 'I:\WAT_GS_02\NEW_ClusterBins_120dB'; % directory of cluster_bins output
+labelDir = 'I:\WAT_GS_02\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
 flagStr = '_0'; % [] or any string following "_labFlag" in file names of labFlag files
-TPWSDir = 'F:\HAT_B_01-03\TPWS'; % directory of TPWS files
-CpB_saveName = 'HAT_B_01-03_CpB_0'; % name to save Counts per Bin matrix
+TPWSDir = 'I:\WAT_GS_02\TPWS'; % directory of TPWS files
+CpB_saveName = 'WAT_GS_02_CpB_0'; % name to save Counts per Bin matrix
 
 minCounts = 0; % minimum counts required to consider labels, should be higher for dolphin than bw
 labelThresh = 0; % predction confidence threshold to be met in order for labels to be retained
@@ -214,6 +217,14 @@ for iFile = 1:length(binClustFList)
             count = count+n; % advance index to first label/prob for next bin
         end
     end
+    
+    remUnIDtimes = setdiff(MTT,zID(:,1));
+    zID = [zID;...
+        [remUnIDtimes,... % times of isolated/unlabeled clicks
+        double(repmat(length(typeList)+1,size(remUnIDtimes,1),1)),... % "unidentified" label for these clicks
+        NaN(size(remUnIDtimes,1),1),... % NaN label confidence for these clicks
+        ones(size(remUnIDtimes,1),1)]]; % nSpec set to one since these clicks were never in a mean spectrum
+    countsPerBin(iC,length(typeList)+1) = countsPerBin(iC,length(typeList)+1)+size(remUnIDtimes,1);
     
     zID = sortrows(zID);
     
