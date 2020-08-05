@@ -14,14 +14,14 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify';
+binDir = 'I:\WAT_WC_02\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify\labels';
+labDir = 'I:\WAT_WC_02\NEW_ClusterBins_120dB\ToClassify\labels';
 NNlab = 0:19; % neural net label values
 % directory to save "data" struct and plots
-savDir = 'I:\WAT_HZ_02\NEW_ClusterBins_120dB\ToClassify\labels';
-saveName = 'WAT_HZ_03_BinsbyLabel_Thresh0'; % file name for saving "data" struct
+savDir = 'I:\WAT_WC_02\NEW_ClusterBins_120dB\ToClassify\labels';
+saveName = 'WAT_WC_02_BinsbyLabel_Thresh0'; % file name for saving "data" struct
 
 plotTF = 0; % set to 1 if you want to click through plots as they're generated,
 % or set to 0 to skip that (they'll still be saved)
@@ -122,39 +122,43 @@ end
 save(fullfile(savDir, saveName),'data','labelThresh','f','t','-v7.3');
 
 %% Plot concatenated spectra for each label
-
-N = length(CTs); % number of labels
-
-for i = 1:N
-    
-    catSpecs = vertcat(data(i).BinSpecs);
-    ICI = vertcat(data(i).ICI);
-    meanICI = mean(ICI,1);
-        
-    figure(1)
-    subplot(1,4,1:3)
-    imagesc([],f,catSpecs');
-    set(gca,'ydir','normal');
-    colormap(jet);
-    ylabel('Frequency (kHz)');
-    xlabel('Bin Number');
-    title(CTs{i});
-    set(gca,'fontSize',14);
-    subplot(1,4,4)
-    plot(t,meanICI,'LineWidth',2);
-    grid on
-    xticks([0 0.25 0.5 0.75 1]);
-    xlabel('ICI (s)');
-    ylabel('Normalized Counts');
-    set(gca,'fontSize',14);
-    
-    if plotTF==1
-    fprintf('Click figure for next plot\n');
-    w = waitforbuttonpress; 
-    end
-    
-    saveas(gcf,fullfile(savDir,[savname{i} '_Thresh' num2str(labelThresh*100)]),'tiff');
-end
+% 
+% N = length(CTs); % number of labels
+% 
+% for i = 1:N
+%     
+%     if isempty(data(i).BinTimes)
+%         continue
+%     end
+%     
+%     catSpecs = vertcat(data(i).BinSpecs);
+%     ICI = vertcat(data(i).ICI);
+%     meanICI = mean(ICI,1);
+%         
+%     figure(1)
+%     subplot(1,4,1:3)
+%     imagesc([],f,catSpecs');
+%     set(gca,'ydir','normal');
+%     colormap(jet);
+%     ylabel('Frequency (kHz)');
+%     xlabel('Bin Number');
+%     title(CTs{i});
+%     set(gca,'fontSize',14);
+%     subplot(1,4,4)
+%     plot(t,meanICI,'LineWidth',2);
+%     grid on
+%     xticks([0 0.25 0.5 0.75 1]);
+%     xlabel('ICI (s)');
+%     ylabel('Normalized Counts');
+%     set(gca,'fontSize',14);
+%     
+%     if plotTF==1
+%     fprintf('Click figure for next plot\n');
+%     w = waitforbuttonpress; 
+%     end
+%     
+%     saveas(gcf,fullfile(savDir,[savname{i} '_Thresh' num2str(labelThresh*100)]),'tiff');
+% end
 
 %% Old plotting code
 % clearvars
