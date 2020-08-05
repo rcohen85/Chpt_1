@@ -4,7 +4,7 @@ import hdf5storage
 import os
 
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation
+from keras.layers import Dense, Dropout, Activation, BatchNormalization
 from keras import initializers
 from keras import regularizers
 from keras.optimizers import SGD
@@ -49,8 +49,10 @@ model.add(Dense(512, activation='relu', kernel_initializer='glorot_uniform', bia
 model.add(Dropout(0.5))
 model.add(Dense(512, activation='relu', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
 model.add(Dropout(0.5))
+model.add(BatchNormalization(epsilon=0.001))
 model.add(Dense(512, activation='relu', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
 model.add(Dropout(0.5))
+model.add(BatchNormalization(epsilon=0.001))
 model.add(Dense(20, activation='softmax', kernel_initializer='glorot_uniform', bias_initializer='zeros'))
 
 #sdg = SGD(lr=0.01, momentum=0.9)# decay=1e-6, nesterov=True)
