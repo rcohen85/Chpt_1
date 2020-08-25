@@ -58,6 +58,9 @@ for iA = 1:size(TPWSlist,1)  % TPWS index
     % Load TPWS and associated labels
     load(fullfile(inDir,TPWSlist(iA).name));
     load(fullfile(inDir,labelList(iA).name));
+    if exist('f','var')
+        p.f = f;
+    end
     
     % Determine bin start/end times
     [yr, mon, day, hr, mint, sec] = datevec(zID(1,1));
