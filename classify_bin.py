@@ -13,12 +13,12 @@ def load_ts(fileName):
 
 
 # directory = os.fsencode('I:/JAX13D_broad_metadata/TPWS_noMinPeakFr')
-inDir = 'F:/NFC_A_03/NEW_ClusterBins_120dB/ToClassify'
+inDir = 'I:/WAT_WC_02/NEW_ClusterBins_120dB/ToClassify'
 directory = os.fsencode(inDir)
 # load trained network
 os.chdir(directory)
-model = load_model('G:/cluster_NNet/TrainTest/20200708-123749/NNet.h5')
-outDir = 'F:/NFC_A_03/NEW_ClusterBins_120dB/ToClassify/labels2'
+model = load_model('I:/cluster_NNet/TrainTest/20200803-091722/NNet.h5')
+outDir = 'I:/WAT_WC_02/NEW_ClusterBins_120dB/ToClassify/labels'
 for file in os.listdir(directory):
 	fileName = os.fsdecode(file)
 	if fileName.endswith("toClassify.mat"):

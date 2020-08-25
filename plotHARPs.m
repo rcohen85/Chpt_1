@@ -1,14 +1,16 @@
 %% Takes gridded SST data and plots western North Atlantic region with HARP locations on top
 
+myFile = fullfile('C:\Users\RCohen\Downloads','AQUA_MODIS.20200601_20200630.L3m.MO.NSST.sst.4km.nc');
+
 % Load data from NetCDF file:
-SST = ncread('A20190602019090.L3m_MO_SST_sst_4km.nc','sst');
-Lat = ncread('A20190602019090.L3m_MO_SST_sst_4km.nc','lat');
-Long = ncread('A20190602019090.L3m_MO_SST_sst_4km.nc','lon');
+SST = ncread(myFile,'sst');
+Lat = ncread(myFile,'lat');
+Long = ncread(myFile,'lon');
 
 [Lon_mat Lat_mat] = meshgrid(Long,Lat);
 SST = SST';
 
-imagesc(SST)
+% imagesc(SST) % just plot SST data real quick to take a look at it
 
 % Trim data to western N Atl:
 [maxlatval maxlat] = min(abs(Lat-47));
@@ -48,26 +50,25 @@ clims = [0 35];
 deg = char(176);
 imagesc(Atl_sst,clims);
 h = colorbar
-hold on
+hold on % Plot HARPs as different color stars based on typical water temps
 plot(ind(1:5,2),ind(1:5,1),'pk','MarkerFaceColor','m','MarkerSize',13);
 plot(ind(6:7,2),ind(6:7,1),'pk','MarkerFaceColor','y','MarkerSize',13);
 plot(ind(8:11,2),ind(8:11,1),'pk','MarkerFaceColor','c','MarkerSize',13);
 hold off
-xlabel('Longitude');
-ylabel('Latitude');
-ylabel(h,['SST (' deg 'C)']);
 yticks([49 169 289 409 529]);
 yticklabels({['45' deg],['40' deg],['35' deg], ['30' deg], ['25' deg]})
 xticks([121 241 361 481 601]);
 xticklabels({['80' deg],['75' deg],['70' deg], ['65' deg], ['60' deg]})
+xlabel('Longitude');
+ylabel('Latitude');
+ylabel(h,['SST (' deg 'C)']);
 title({'Atlantic Passive', 'Acoustic Monitoring Sites'});
-set(gca,'fontSize',25);
-%title('MODIS Monthly Average SST: March 2019');
+set(gca,'fontSize',23);
 for i = 1:size(sites,2)
     if i >= 1 && i <= 5
         text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','m','FontWeight','bold');
     elseif i >= 6 && i <= 7
-        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','r','FontWeight','bold');
+        text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','k','FontWeight','bold');
     elseif i >= 8 && i <= 11
         text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','b','FontWeight','bold');
     end

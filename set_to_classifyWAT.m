@@ -1,5 +1,5 @@
 clearvars;
-inDir = 'G:\USWTR02B\NEW_ClusterBins_120dB';
+inDir = 'I:\WAT_WC_02\NEW_ClusterBins_120dB';
 fList = dir(fullfile(inDir,'*clusters*.mat'));
 if ~isdir(fullfile(inDir,'ToClassify'))
     mkdir(fullfile(inDir,'ToClassify'))
@@ -12,7 +12,8 @@ for iFile = 1:length(fList)
     load(fullfile(fList(iFile).folder,fList(iFile).name));
     
     cInt = vertcat(binData.cInt);
-    goodBins = find(cInt>1); % need to leave out bins w a single click due to miscalculation of envMean in old version of cluster_bins
+    goodBins = find(cInt>1); % need to leave out bins w a single click due 
+    % to no ICI dist & miscalculation of envMean in old version of cluster_bins
     
     sumTimeMat = [];
     whichCell = [];
@@ -20,7 +21,7 @@ for iFile = 1:length(fList)
         if ismember(iTimes,goodBins)
         sumTimeMat = [sumTimeMat;repmat(binData(iTimes).tInt,...
             size(binData(iTimes).nSpec,2),1)];
-        whichCell = [whichCell;[1:size(binData(iTimes).nSpec,2)]'];
+        whichCell = [whichCell;(1:size(binData(iTimes).nSpec,2))'];
         end
     end
     
@@ -33,6 +34,7 @@ for iFile = 1:length(fList)
     
     catDTT = vertcat(binData(goodBins).dTT);
     catDTTNorm = catDTT./max(catDTT,[],2);
+    catDTTNorm(isnan(catDTTNorm)) = 0;
     
     catEnv = vertcat(binData(goodBins).envMean);
     if size(catEnv,2) == 300

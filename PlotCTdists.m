@@ -294,7 +294,7 @@ CT_names = {'Blainvilles','Boats','CT10','CT2','CT3','CT4\_6','CT5','CT7','CT8',
     'Spermwhale','Trues'};
 
 % Plot with bubblemap legends
-for i = 1:19
+for i = 1:length(CTs)
 load(fullfile(seasDir,fileList(i).name));
 
 minbub = floor(min(min(seasDat_oneCT{:,2:5})));
@@ -344,7 +344,7 @@ saveas(figure(2),fullfile(seasDir,savename),'tiff')
 end
 
 % Plot without bubblemap legends
-for i = 1:19
+for i = 1:length(CTs)
 load(fullfile(seasDir,fileList(i).name));
 
 minbub = floor(min(min(seasDat_oneCT{:,2:5})));

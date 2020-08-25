@@ -1,3 +1,5 @@
+%% USE LabelSelect INSTEAD, CONTAINS ALL THE STEPS CARRIED OUT HERE AND MORE
+
 %% Load toClassify files and labels, organize by NNet label, and plot 
 % concatenated bins by label. Requires toClassify files and predLab output
 % from neural net. 

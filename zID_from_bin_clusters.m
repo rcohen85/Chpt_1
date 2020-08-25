@@ -4,11 +4,11 @@ clearvars
 baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp'; % directory of training folders
 modDir = 'I:\cluster_NNet\TrainTest\20200803-091722\NNet.h5'; % path of trained model
 
-binClustDir = 'F:\NFC_A_02\NEW_ClusterBins_120dB'; % directory of cluster_bins output
-labelDir = 'F:\NFC_A_02\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
+binClustDir = 'I:\WAT_BS_02\NEW_ClusterBins_120dB'; % directory of cluster_bins output
+labelDir = 'I:\WAT_BS_02\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
 flagStr = '_0'; % [] or any string following "_labFlag" in file names of labFlag files
-TPWSDir = 'F:\NFC_A_02\TPWS'; % directory of TPWS files
-CpB_saveName = 'NFC_A_02_CpB_0'; % name to save Counts per Bin matrix
+TPWSDir = 'J:\Shared drives\MBARC_All\TPWS\WAT\WAT_composite_clusters\WAT_BS_02\WAT_BS_02_TPWS'; % directory of TPWS files
+CpB_saveName = 'WAT_BS_02_CpB_0'; % name to save Counts per Bin matrix
 
 minCounts = 0; % minimum counts required to consider labels, should be higher for dolphin than bw
 labelThresh = 0; % predction confidence threshold to be met in order for labels to be retained
