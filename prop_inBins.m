@@ -10,9 +10,11 @@ percSpec_perFile = zeros(length(binList),1,1);
 for iA = 1:length(binList)
     
      load(fullfile(binList(iA).folder,binList(iA).name));
-     percSpec = sum(horzcat(binData.percSpec))/length(binData);
+%      percSpec1 = sum(horzcat(binData.percSpec))/length(binData);
+%      percSpec2 = sum(horzcat(binData.percSpec))/length(horzcat(binData.percSpec));
+     percSpec3 = sum(horzcat(binData.nSpec))/sum(horzcat(binData.cInt));
      
-     percSpec_perFile(iA) = percSpec;
+     percSpec_perFile(iA) = percSpec3;
     
 end
 
