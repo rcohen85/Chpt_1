@@ -4,11 +4,11 @@ clearvars
 baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp'; % directory of training folders
 modDir = 'I:\cluster_NNet\TrainTest\20200803-091722\NNet.h5'; % path of trained model
 
-binClustDir = 'I:\WAT_BS_02\NEW_ClusterBins_120dB'; % directory of cluster_bins output
-labelDir = 'I:\WAT_BS_02\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
+binClustDir = 'G:\USWTR02B\NEW_ClusterBins_120dB'; % directory of cluster_bins output
+labelDir = 'G:\USWTR02B\NEW_ClusterBins_120dB\ToClassify\labels'; % directory of labels
 flagStr = '_0'; % [] or any string following "_labFlag" in file names of labFlag files
-TPWSDir = 'J:\Shared drives\MBARC_All\TPWS\WAT\WAT_composite_clusters\WAT_BS_02\WAT_BS_02_TPWS'; % directory of TPWS files
-CpB_saveName = 'WAT_BS_02_CpB_0'; % name to save Counts per Bin matrix
+TPWSDir = 'G:\USWTR02B\TPWS'; % directory of TPWS files
+CpB_saveName = 'USWTR02B_CpB_0'; % name to save Counts per Bin matrix
 
 minCounts = 0; % minimum counts required to consider labels, should be higher for dolphin than bw
 labelThresh = 0; % predction confidence threshold to be met in order for labels to be retained
@@ -26,13 +26,13 @@ typeList = dir(baseDir);
 typeList = typeList(3:end);
 typeList = typeList(vertcat(typeList.isdir));
 
-Legend = struct('Name',[],'zID_Label',[]);
+mySpID = struct('Name',[],'zID_Label',[]);
 for i = 1:length(typeList)
-    Legend(i).Name = typeList(i).name;
-    Legend(i).zID_Label = i;
+    mySpID(i).Name = typeList(i).name;
+    mySpID(i).zID_Label = i;
 end
-% Legend(i+1).Name = 'Unidentified';
-% Legend(i+1).zID_Label = length(typeList)+1;
+% mySpID(i+1).Name = 'Unidentified';
+% mySpID(i+1).zID_Label = length(typeList)+1;
 
 %%
 countsPerBinAll = [];
@@ -239,7 +239,7 @@ for iFile = 1:length(binClustFList)
         save(fullfile(saveDir,zFDName),'zFD')
     end
     
-    save(fullfile(saveDir,zIDName),'zID','legend','labelThresh','minCounts','modDir')
+    save(fullfile(saveDir,zIDName),'zID','mySpID','labelThresh','minCounts','modDir')
     
     % running tallies to calculate proportions of bins/clicks that end up
     % with labels
