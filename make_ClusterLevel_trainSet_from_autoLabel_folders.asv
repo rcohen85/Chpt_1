@@ -75,21 +75,18 @@ nMax = max(nM(:,1));
 nMin = min(nM(:,1));
 for iU = 1:length(myTypeList)
     nItems = size(mergedTypes(iU).clusterSpectra,1);
-    
     testSelect = randsample(nItems,ceil(.15*nItems),false);
     if length(testSelect)>ntest
         expandedTestList = randsample(testSelect,ntest); 
     else
         expandedTestList = randsample(testSelect,ntest,true);% beef up tiny sample size.
     end
-    
     trainSelect = setdiff(1:nItems,expandedTestList);
     if length(trainSelect)>ntrain
         expandedTrainList = randsample(trainSelect,ntrain); 
     else
         expandedTrainList = randsample(trainSelect,ntrain,true);% beef up tiny sample size.
     end
-    
     testLabelSet = [testLabelSet;iU*ones(size(expandedTestList))];
     testMSPSet = [testMSPSet;mergedTypes(iU).clusterSpectra(expandedTestList,:)];
     testDTTSet = [testDTTSet;mergedTypes(iU).clusterICI(expandedTestList,:)];
