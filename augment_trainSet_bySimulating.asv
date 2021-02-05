@@ -9,7 +9,7 @@ inDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp';
 load(fullfile(inDir,'MergedTypes'));
 
 type = 3; % row containing CT of interest in myTypeList
-N = 5500; % total # examples desired (for this class) to make train & test sets
+N = 1833; % total # examples needed (for this class) to make train & test sets with no repeats
 f = 5:0.5:98.5; % freq vector corresponding to spectra
 t = 0:.01:1; % time vector corresponding to ICI distributions
 
