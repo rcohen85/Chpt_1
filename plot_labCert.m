@@ -21,7 +21,7 @@ if ~isdir(savDir)
     mkdir(savDir)
 end
 
-if exist(fullfile(savDir,'setCertainty.mat'))~=2
+% if exist(fullfile(savDir,'setCertainty.mat'))~=2
     
     labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
     
@@ -36,7 +36,6 @@ if exist(fullfile(savDir,'setCertainty.mat'))~=2
         load(fullfile(labCertDir,labCertFiles(i).name),'labelCertainty','RL');
         load(fullfile(clasDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_toClassify')));
         load(fullfile(labDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_predLab')));
-        
         
         for j = 1:size(RL,2)
             
@@ -90,9 +89,9 @@ if exist(fullfile(savDir,'setCertainty.mat'))~=2
     
     save(fullfile(savDir,'setCertainty'),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
     
-else
-    load(fullfile(savDir,'setCertainty'));
-end
+% else
+%     load(fullfile(savDir,'setCertainty'));
+% end
 %% Plot
 
 for i = 1:size(setCert,2)
