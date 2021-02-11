@@ -1,9 +1,10 @@
-
-labCertDir = 'G:\WAT_GS_01\WAT_GS_01_TPWS';
-clasDir = 'I:\WAT_GS_01\NEW_ClusterBins_120dB\ToClassify';
-labDir = 'I:\WAT_GS_01\NEW_ClusterBins_120dB\ToClassify\labels';
+clearvars
+labCertDir = 'G:\WAT_BC_01\TPWS';
+clasDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify';
+labDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify\labels';
+errDir = 'G:\ErrorEval';
 savDir = fullfile(labCertDir,'LabelCert_Plots');
-dep = 'WAT\_GS\_01';
+dep = 'WAT\_BC\_01';
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
     'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
     'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
@@ -12,7 +13,7 @@ f = 5:0.5:98.5;
 t = 0:.01:1;
 
 minPPRL = [120 122 125 127 130];
-minNumClicks = [0 20 35 50 75];
+minNumClicks = [0 20 35 50 75]';
 
 %% Compile data from multiple labCert files
 
@@ -94,7 +95,7 @@ else
 end
 %% Plot
 
-for i = 6:size(setCert,2)
+for i = 1:size(setCert,2)
     
     Lab = setCert{1,i};
     Specs = setSpecs{1,i};
@@ -275,3 +276,73 @@ for i = 6:size(setCert,2)
         end
     end
 end
+
+%% Compare % error for each click type across deployments
+
+% Load setCert files
+errFiles = dir(fullfile(errDir,'*setCertainty.mat'));
+site = {};
+siteCert = {};
+siteRLmean = {};
+
+for i = 1:size(errFiles,1)
+    site{i,1} = strrep(errFiles(i).name,'_setCertainty.mat','');
+    load(fullfile(errDir,errFiles(i).name),'setCert');
+    load(fullfile(errDir,errFiles(i).name),'setRLmean');
+    for j = 1:size(setCert,2)
+        siteCert{i,j} = setCert{1,j};
+        siteRLmean{i,j} = setRLmean{1,j};
+    end
+end
+
+siteErr = {};
+typeErr = {};
+optThresh = {};
+
+% For each CT:
+for j = 1:size(siteCert,2)
+    
+    % Create error surface at each site
+    err = [];
+    for st = 1:size(siteCert,1)
+        if ~isempty(siteCert{st,j})
+            for k = 1:length(minNumClicks)
+                for l = 1:length(minPPRL)
+                    % find bins that meet minPPRL and minNumClicks criteria
+                    goodAmp = find(siteRLmean{st,j}>=minPPRL(l));
+                    goodNum = find(siteCert{st,j}(:,3)>=minNumClicks(k));
+                    goodInd = intersect(goodAmp,goodNum);
+                    thisLab = siteCert{st,j}(goodInd,:);
+                    
+                    if ~isempty(thisLab)
+                        % identify incorrectly labeled bins
+                        wrong = thisLab(thisLab(:,4)==0,:);
+                        wrong_perc = round(size(wrong,1)/size(thisLab,1),3);
+                        err(k,l,st) = wrong_perc;
+                    end
+                end
+            end
+        end
+    end
+    
+    siteErr{1,j} = err;
+    
+    % Sum error surfaces across sites for this CT
+    typeErr{1,j} = sum(siteErr{1,j},3);
+    
+    % Identify summed error min & corresponding RL/# clicks thresholds
+    best = min(typeErr{1,j}(:));
+    [bestRow bestCol] = find(typeErr{1,j}==best);
+    bestRL = minPPRL(bestCol);
+    bestNum = minNumClicks(bestRow);
+    optThresh{1,j} = [bestRL,bestNum];
+    
+    % Plot summed error surface
+    figure(999)
+    surf(minPPRL,minNumClicks,typeErr{1,j})
+    e = input('Enter to continue' );
+
+end
+
+% Save
+save(fullfile(errDir,'Error_Summary.mat'),'errFiles','site','siteCert','siteRLmean','siteErr','typeErr','optThresh','-v7.3');
