@@ -1,7 +1,7 @@
 clearvars
 labCertDir = 'G:\WAT_BC_01\TPWS';
-clasDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify';
-labDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify\labels';
+clasDir = 'J:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify';
+labDir = 'J:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify\labels';
 errDir = 'G:\ErrorEval';
 savDir = fullfile(labCertDir,'LabelCert_Plots');
 dep = 'WAT\_BC\_01';
@@ -20,8 +20,6 @@ minNumClicks = [0 20 35 50 75]';
 if ~isdir(savDir)
     mkdir(savDir)
 end
-
-% if exist(fullfile(savDir,'setCertainty.mat'))~=2
     
     labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
     
@@ -87,11 +85,8 @@ end
         end
     end
     
-    save(fullfile(savDir,'setCertainty'),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
+    save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
     
-% else
-%     load(fullfile(savDir,'setCertainty'));
-% end
 %% Plot
 
 for i = 1:size(setCert,2)
@@ -326,21 +321,26 @@ for j = 1:size(siteCert,2)
     
     siteErr{1,j} = err;
     
-    % Sum error surfaces across sites for this CT
-    typeErr{1,j} = sum(siteErr{1,j},3);
-    
-    % Identify summed error min & corresponding RL/# clicks thresholds
-    best = min(typeErr{1,j}(:));
-    [bestRow bestCol] = find(typeErr{1,j}==best);
-    bestRL = minPPRL(bestCol);
-    bestNum = minNumClicks(bestRow);
-    optThresh{1,j} = [bestRL,bestNum];
-    
-    % Plot summed error surface
-    figure(999)
-    surf(minPPRL,minNumClicks,typeErr{1,j})
-    e = input('Enter to continue' );
-
+    if ~isempty(siteCert{st,j})
+        % Sum error surfaces across sites for this CT
+        typeErr{1,j} = sum(siteErr{1,j},3);
+        
+        % Identify summed error min & corresponding RL/# clicks thresholds
+        best = min(typeErr{1,j}(:));
+        [bestRow bestCol] = find(typeErr{1,j}==best);
+        bestRL = minPPRL(bestCol);
+        bestNum = minNumClicks(bestRow);
+        optThresh{1,j} = [bestRL,bestNum];
+        
+        % Plot summed error surface
+        figure(999)
+        surf(minPPRL,minNumClicks,typeErr{1,j})
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Error');
+        title(CTs{j});
+        e = input('Enter to continue' );
+    end
 end
 
 % Save
