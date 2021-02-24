@@ -80,7 +80,7 @@ for iFile = 1:length(binClustFList)
             labelSet = [];
             probSet = [];
             flagSet = [];
-            if n == 1  % find labels and probs corresponding to mean spectra in this bin
+            if n == 1  % find labels and probs corresponding to mean spectrum in this bin
                 labelSet = predLabels(count);
                 probSet = probs(count,labelSet);
                 if exist('labFlag')
