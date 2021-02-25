@@ -290,6 +290,9 @@ for i = 1:size(errFiles,1)
 end
 
 siteErr = {};
+typeCert = {};
+typeRLmean = {};
+propRetained = {};
 typeErr = {};
 optThresh = {};
 
@@ -324,9 +327,29 @@ for j = 1:size(siteCert,2)
         end
     end
     
-%     siteErr{1,j} = err;
+    % concatenate evaluated bins across sites for each CT
+    typeCert{1,j} = cat(1,siteCert{:,j});
+    typeRLmean{1,j} = cat(1,siteRLmean{:,j});
     
-    if sum(cellfun(@isempty,siteErr(:,j))) < 37
+    if sum(cellfun(@isempty,siteErr(:,j))) < size(siteCert,1) % if any bins were evaluated for this CT
+         % Calculate proportion of bins retained at each RL/# clicks thresh combo
+         prop = [];
+         for k = 1:length(minNumClicks)
+             for l = 1:length(minPPRL)
+                 % find bins that meet minPPRL and minNumClicks criteria
+                 goodAmp = find(typeRLmean{1,j}>=minPPRL(l));
+                 goodNum = find(typeCert{1,j}(:,3)>=minNumClicks(k));
+                 goodInd = intersect(goodAmp,goodNum);
+                 
+                 if ~isempty(goodInd)
+                     prop(k,l) = size(goodInd,1)./size(typeCert{1,j},1);
+                 else
+                     prop(k,l) = NaN;
+                 end
+             end
+         end
+         propRetained{1,j} = prop;
+         
         % Average error surfaces across sites for this CT
         typeErr{1,j} = mean(err,3,'omitnan');
         
@@ -337,16 +360,26 @@ for j = 1:size(siteCert,2)
         bestNum = minNumClicks(bestRow(1));
         optThresh{1,j} = [bestRL,bestNum];
         
+        
+        figure(999), clf
         % Plot summed error surface
-        figure(999)
+        subplot(2,1,1)
         surf(minPPRL,minNumClicks,typeErr{1,j})
         xlabel('Min PPRL');
         ylabel('Min # Clicks');
         zlabel('Error');
-        title(CTs{j},'fontSize',16);
+        title([CTs{j},' Mean Error']);    
+        % Plot proportion retained
+        subplot(2,1,2)
+        surf(minPPRL,minNumClicks,propRetained{1,j})
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Proportion retained');
+        title([CTs{j},' Proportion of Bins Retained']);
         e = input('Enter to save figure and continue' );
-        saveas(gcf,fullfile(errDir,[CTs{j},'_MeanError.fig']));
+        saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
     else
+        propRetained{1,j} = [];
         typeErr{1,j} = [];
     end
 end
