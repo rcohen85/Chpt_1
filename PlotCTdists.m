@@ -14,8 +14,9 @@ clearvars
 
 % Load daily totals at each site
 dayDir = 'G:\DailyCT_Totals'; % directory containing CT daily totals for each site
-matchStr = 'DailyTotals';
+matchStr = '*DailyTotals_Prob0_RL120_numClicks0.mat';
 seasDir = 'G:\SeasonalCT_Totals'; % directory to save seasonal data 
+mapDir = 'G:\SeasonalMaps';
 RLThresh = 120;
 numClicksThresh = 0;
 probThresh = 0;
@@ -25,7 +26,7 @@ lat_lims = [26 44];
 lon_lims = [-82.00 -63];
 
 %% Calculate cumulative seasonal hours for each site
-fileList = dir(fullfile(dayDir,'*DailyTotals*.mat'));
+fileList = dir(fullfile(dayDir,matchStr));
 sites = cellstr(char(fileList(:).name));
 for k = 1:size(sites,1)
     ind = strfind(sites{k,1},'_');
@@ -155,9 +156,12 @@ end
 
 %% Plot seasonal data
 
-fileList = dir(fullfile(seasDir,'*Seasonal_Totals*.mat'));
+fileList = dir(fullfile(seasDir,['*Seasonal_Totals_Prob' num2str(probThresh)...
+    '_PPRL' num2str(RLThresh) '_numClicks' num2str(numClicksThresh) '*']));
 
-% Plot with bubblemap legends
+% Plot and save bubblemaps
+% To plot without legends, add 'LegendVisible','off' to each call of
+% geobubble
 for iS = 1:size(fileList,1)
 load(fullfile(seasDir,fileList(iS).name));
 ind = strfind(fileList(iS).name,'_');
@@ -202,18 +206,21 @@ title('Fall');
 % if iS == 6
 %     savename = ['CT4_6_SeasonalMaps'];
 % else
-%     savename = [CT_names{iS} '_SeasonalMaps'];
+%     savename = [CT '_SeasonalMaps'];
 % end
-savename = [CT '_SeasonalMaps'];
 
-saveas(figure(2),fullfile(seasDir,savename),'fig')
-saveas(figure(2),fullfile(seasDir,savename),'tiff')
+savename = strrep(fileList(iS).name,'Seasonal_Totals','Seasonal_Maps');
+
+saveas(figure(2),fullfile(mapDir,savename),'fig')
+saveas(figure(2),fullfile(mapDir,savename),'tiff')
 
 end
 
-% % Plot without bubblemap legends
-% for iS = 1:length(CTs)
+% % Plot without bubblemap legends (each map is bigger)
+% for iS = 1:size(fileList,1)
 % load(fullfile(seasDir,fileList(iS).name));
+% ind = strfind(fileList(iS).name,'_');
+% CT = fileList(iS).name(1:ind(1)-1);
 % 
 % minbub = floor(min(min(seasonalData{:,2:5})));
 % maxbub = ceil(max(max(seasonalData{:,2:5})));
@@ -248,16 +255,19 @@ end
 % gb.Basemap = 'grayland';
 % geolimits(lat_lims,lon_lims)
 % title('Fall');
-% [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT_names{iS}),...
+% [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT),...
 %     't',[.075 .05 .85 .89] );
 % 
-% if iS == 6
-%     savename = ['CT4_6_SeasonalMaps'];
-% else
-%     savename = [CT_names{iS} '_SeasonalMaps'];
-% end
-% % saveas(figure(3),'Seasonal CT Presence','fig')
-% saveas(figure(3),fullfile(seasDir,savename),'tiff')
+% % if iS == 6
+% %     savename = ['CT4_6_SeasonalMaps'];
+% % else
+% %     savename = [CT '_SeasonalMaps'];
+% % end
+%
+% savename = strrep(fileList(iS).name,'Seasonal_Totals','Seasonal_Maps');
+% 
+% saveas(figure(3),fullfile(mapDir,savename),'fig')
+% saveas(figure(3),fullfile(mapDir,savename),'tiff')
 % end
 
 %% Calculate cumulative monthly hours for each site (May 2016 - Apr 2017)
