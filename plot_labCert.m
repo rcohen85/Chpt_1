@@ -303,9 +303,9 @@ binsEvaluated = cell(size(siteCert,1),size(siteCert,2));
 typeCert = cell(1,size(siteCert,2));
 typeRLmean = cell(1,size(siteCert,2));
 propBinsLost = cell(1,size(siteCert,2));
-propClicksLost = cell(1,size(siteCert,2));
+% propClicksLost = cell(1,size(siteCert,2));
 errRange = cell(size(siteErr,1),size(siteErr,2));
-scaledErr = cell(1,size(siteCert,2));
+meanTypeErr = cell(1,size(siteCert,2));
 optThresh = cell(1,size(siteCert,2));
 
 % For each CT:
@@ -352,7 +352,7 @@ for j = 1:size(siteCert,2)
          % Calculate proportion of bins retained at each RL/# clicks thresh combo
          propbins = [];
          propclicks = [];
-         totClicks = sum(typeCert{1,j}(:,3));
+%          totClicks = sum(typeCert{1,j}(:,3));
          for k = 1:length(minNumClicks)
              for l = 1:length(minPPRL)
                  % find bins that meet minPPRL and minNumClicks criteria
@@ -363,15 +363,15 @@ for j = 1:size(siteCert,2)
                  
                  if ~isempty(goodInd)
                      propbins(k,l) = 1-(size(goodInd,1)./size(typeCert{1,j},1));
-                     propclicks(k,l) = 1-(goodClicks./totClicks);
+%                      propclicks(k,l) = 1-(goodClicks./totClicks);
                  else
                      propbins(k,l) = NaN;
-                     propclicks(k,l) = NaN;
+%                      propclicks(k,l) = NaN;
                  end
              end
          end
          propBinsLost{1,j} = propbins;
-         propClicksLost{1,j} = propclicks;
+%          propClicksLost{1,j} = propclicks;
          
          for i = 1:size(siteErr,1)
                  q = [min(min(siteErr{i,j})),max(max(siteErr{i,j}))];
@@ -380,57 +380,62 @@ for j = 1:size(siteCert,2)
                  end
          end
          
-         % Scale error surfaces by # bins evaluated at each grid point,
-         % then normalize back to [0 1]
-         scale_err =  err.*sqrt(binsEval);
-         normScale_err = scale_err./max(max(max(scale_err))); %set highest scaled error value across sites to 1, all others proportional to it
-         
-         % Average scaled error surfaces across sites for this CT
-         scaledErr{1,j} = mean(normScale_err,3,'omitnan');
+%          % Scale error surfaces by # bins evaluated at each grid point,
+%          % then normalize back to [0 1]
+%          scale_err =  err.*sqrt(binsEval);
+%          normScale_err = scale_err./max(max(max(scale_err))); %set highest scaled error value across sites to 1, all others proportional to it
+%          
+%          % Average scaled error surfaces across sites for this CT
+%          scaledErr{1,j} = mean(normScale_err,3,'omitnan');
+
+        % Average error surfaces across sites for this CT
+        meanTypeErr{1,j} = mean(err,3,'omitnan');
 
          % Sort average scaled error & corresponding RL/# clicks thresholds, proportion of bins/clicks lost
         [PPRLgrid NumClicksgrid] = meshgrid(minPPRL,minNumClicks);
-        [ordErr I] = sort(scaledErr{1,j}(:),'ascend');
-        optThresh{1,j}(:,1) = scaledErr{1,j}(I);
+%         [ordErr I] = sort(scaledErr{1,j}(:),'ascend');
+%         optThresh{1,j}(:,1) = scaledErr{1,j}(I);
+[ordErr I] = sort(meanTypeErr{1,j}(:),'ascend');
+        optThresh{1,j}(:,1) = meanTypeErr{1,j}(I);
         optThresh{1,j}(:,2) = PPRLgrid(I);
         optThresh{1,j}(:,3) = NumClicksgrid(I);
         optThresh{1,j}(:,4) = propBinsLost{1,j}(I);
-        optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
+%         optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
         
         figure(999), clf
         % Plot averaged scaled error surface
-        subplot(1,3,1)
-        surf(minPPRL,minNumClicks,scaledErr{1,j})
+        subplot(1,2,1)
+        surf(minPPRL,minNumClicks,meanTypeErr{1,j})
         zlim([0 1]);
         xlabel('Min PPRL');
         ylabel('Min # Clicks');
         zlabel('Error');
-        title([CTs{j},' Mean Scaled Error']);    
+        title([CTs{j},' Mean Error']);    
         % Plot proportion of bins lost
-        subplot(1,3,2)
+        subplot(1,2,2)
         surf(minPPRL,minNumClicks,propBinsLost{1,j})
         zlim([0 1]);
         xlabel('Min PPRL');
         ylabel('Min # Clicks');
         zlabel('Proportion lost');
         title([CTs{j},' Proportion of Bins Lost']);
-        % Plot proportion of clicks retained
-        subplot(1,3,3)
-        surf(minPPRL,minNumClicks,propClicksLost{1,j})
-        zlim([0 1]);
-        xlabel('Min PPRL');
-        ylabel('Min # Clicks');
-        zlabel('Proportion lost');
-        title([CTs{j},' Proportion of Clicks Lost']);
+%         % Plot proportion of clicks retained
+%         subplot(1,3,3)
+%         surf(minPPRL,minNumClicks,propClicksLost{1,j})
+%         zlim([0 1]);
+%         xlabel('Min PPRL');
+%         ylabel('Min # Clicks');
+%         zlabel('Proportion lost');
+%         title([CTs{j},' Proportion of Clicks Lost']);
         e = input('Enter to save figure and continue' );
         saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
     else
         propBinsLost{1,j} = [];
-        scaledErr{1,j} = [];
+        meanTypeErr{1,j} = [];
     end
 end
 
 % Save
 save(fullfile(errDir,'Error_Summary.mat'),'errFiles','site','siteCert','siteRLmean',...
-    'siteErr','binsEvaluated','typeCert','typeRLmean','propBinsLost','propClicksLost',...
-    'errRange','scaledErr','optThresh','-v7.3');
+    'siteErr','meanTypeErr','binsEvaluated','typeCert','typeRLmean','propBinsLost',...
+    'errRange','optThresh','-v7.3');
