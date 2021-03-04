@@ -1,25 +1,264 @@
-%% Calculate montly & seasonal total hours of click presence for 19 Atl CTs
-% Plot monthly & seasonal distributions of click types across Atlantic HARP
+%% Calculate seasonal total hours of click presence for Atl CTs
+% Plot seasonal distributions of click types across Atlantic HARP
 % sites using scaled circles
-% Note: this script expects daily totals of all 19 CTs (NNet labels 0:18)
-% but can accept any subset of the Atl sites
+% Note: this script is hard coded for the Atlantic recording sites
+% Seasons are hard coded thus:
+% Winter: December, January, February
+% Spring: March, April, May
+% Summer: June, July, August
+% Fall: September, October, November
+% Normalization for effort doesn't account for possibility of a leap year
+% (old monthly binning & plotting code at bottom, not updated)
+
 clearvars
 
 % Load daily totals at each site
-dayDir = 'G:\New_Atl_CTs\DailyCT_Totals'; % directory containing CT daily totals for each site
-seasDir = 'G:\New_Atl_CTs\Seasonal_CT_Totals';
-fileList = dir(fullfile(dayDir,'*DailyTotals.mat'));
-% CTs matches the order of correspondence of NNet labels 0:18 to their
-% report names
-CTs = {'CT10','CT2','CT3','CT4_6','CT5','CT7','CT8','CT9','Blainvilles','Boats',...
-    'Cuviers','Echosounder','Gervais','Kogia','Noise','Rissos','Sowerbys',...
-    'Spermwhale','Trues'};
+dayDir = 'G:\DailyCT_Totals'; % directory containing CT daily totals for each site
+matchStr = 'DailyTotals';
+seasDir = 'G:\SeasonalCT_Totals'; % directory to save seasonal data 
+RLThresh = 120;
+numClicksThresh = 0;
+probThresh = 0;
 
 % Set lat/long limits to plot only your region of interest
-% lat_lims = [25 45];
-% lon_lims = [-82.00 -62];
 lat_lims = [26 44];
 lon_lims = [-82.00 -63];
+
+%% Calculate cumulative seasonal hours for each site
+fileList = dir(fullfile(dayDir,'*DailyTotals*.mat'));
+sites = cellstr(char(fileList(:).name));
+for k = 1:size(sites,1)
+    ind = strfind(sites{k,1},'_');
+    sites{k,1} = sites{k,1}(1:ind(2)-1);
+end
+
+seasDat = cell(size(fileList,1),7); % initialize cell array to hold seasonal data for all sites
+
+% Calculate duration of each season in a full non-leap year
+yearVec = datevec(datenum('2001-01-01'):1:datenum('2001-12-31'));
+win_dur = numel(find(yearVec(:,2)==12 | yearVec(:,2)==1 | yearVec(:,2)==2));
+spr_dur = numel(find(yearVec(:,2)>=3 & yearVec(:,2)<=5));
+sum_dur = numel(find(yearVec(:,2)>=6 & yearVec(:,2)<=8));
+fall_dur = numel(find(yearVec(:,2)>=9 & yearVec(:,2)<=11));
+
+for iS = 1:size(fileList,1) % for each DailyTotals file
+    
+    load(fullfile(dayDir,fileList(iS).name));
+    dvec = datevec(dailyTots(:,1));
+    
+    for iCT = 1:size(dailyTots,2)-1 % for each label
+        
+        seasDat{iS,1,iCT} = sites(iS); % List site
+        
+            if ~isempty(dailyTots)       
+                
+                % Remove bins not meeting thresholds
+                dailyTots(binFeatures{1,iCT}<probThresh,iCT+1) = NaN;
+                dailyTots(binFeatures{2,iCT}<RLThresh,iCT+1) = NaN;
+                dailyTots(binFeatures{3,iCT}<numClicksThresh,iCT+1) = NaN;
+                
+                % Divide bins by season
+                win_ind = find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2);
+                spr_ind = find(dvec(:,2)>=3 & dvec(:,2)<=5);
+                sum_ind = find(dvec(:,2)>=6 & dvec(:,2)<=8);
+                fall_ind = find(dvec(:,2)>=9 & dvec(:,2)<=11);
+
+                % Sum remaining bins for each season
+                seasDat{iS,2,iCT} = sum(dailyTots(win_ind,iCT+1),'omitnan');
+                seasDat{iS,3,iCT} = sum(dailyTots(spr_ind,iCT+1),'omitnan');
+                seasDat{iS,4,iCT} = sum(dailyTots(sum_ind,iCT+1),'omitnan');
+                seasDat{iS,5,iCT} = sum(dailyTots(fall_ind,iCT+1),'omitnan');
+                
+%                 % Find days with repeated effort in this deployment
+%                 monthDays = dvec(:,2:3);
+%                 [~, ia, ic] = unique(monthDays,'rows'); 
+%                 [count, ~, iCounts] = histcounts(ic, numel(ia));
+%                 repDays = count(iCounts)>1;
+%                 
+%                 % Divide repeated days into appropriate seasons
+%                 win_reps = sum(repDays(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2))/2;
+%                 spr_reps = sum(repDays(dvec(:,2)>=3 & dvec(:,2)<=5))/2;
+%                 sum_reps = sum(repDays(dvec(:,2)>=6 & dvec(:,2)<=8))/2;
+%                 fall_reps = sum(repDays(dvec(:,2)>=9 & dvec(:,2)<=11))/2;
+                
+                % Normalize seasons by effort
+                seasDat{iS,2,iCT} = seasDat{iS,2,iCT}/(numel(win_ind)/win_dur);
+                seasDat{iS,3,iCT} = seasDat{iS,3,iCT}/(numel(spr_ind)/spr_dur);
+                seasDat{iS,4,iCT} = seasDat{iS,4,iCT}/(numel(sum_ind)/sum_dur);
+                seasDat{iS,5,iCT} = seasDat{iS,5,iCT}/(numel(fall_ind)/fall_dur);
+            end
+        
+        % Add site lat/lon info
+        if strcmp(seasDat{iS,1,iCT},'WAT_HZ')
+            seasDat{iS,6,iCT} = 41.06165;
+            seasDat{iS,7,iCT} = -66.35155;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_OC')
+            seasDat{iS,6,iCT} = 40.22999;
+            seasDat{iS,7,iCT} = -67.97798;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_NC')
+            seasDat{iS,6,iCT} = 39.83295;
+            seasDat{iS,7,iCT} = -69.98194;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_BC')
+            seasDat{iS,6,iCT} = 39.19192;
+            seasDat{iS,7,iCT} = -72.22735;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_WC')
+            seasDat{iS,6,iCT} = 38.37337;
+            seasDat{iS,7,iCT} = -73.36985;
+        elseif strcmp(seasDat{iS,1,iCT},'NFC_A')
+            seasDat{iS,6,iCT} = 37.16452;
+            seasDat{iS,7,iCT} = -74.46585;
+        elseif strcmp(seasDat{iS,1,iCT},'HAT_A')
+            seasDat{iS,6,iCT} = 35.30183;
+            seasDat{iS,7,iCT} = -74.87895;
+        elseif strcmp(seasDat{iS,1,iCT},'HAT_B')
+            seasDat{iS,6,iCT} = 35.5841;
+            seasDat{iS,7,iCT} = -74.7499;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_GS')
+            seasDat{iS,6,iCT} = 33.66992;
+            seasDat{iS,7,iCT} = -75.9977;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_BP')
+            seasDat{iS,6,iCT} = 32.10527;
+            seasDat{iS,7,iCT} = -77.09067;
+        elseif strcmp(seasDat{iS,1,iCT},'WAT_BS')
+            seasDat{iS,6,iCT} = 30.58295;
+            seasDat{iS,7,iCT} = -77.39002;
+        elseif strcmp(seasDat{iS,1,iCT},'JAX_D')
+            seasDat{iS,6,iCT} = 30.27818;
+            seasDat{iS,7,iCT} = -80.22085;
+        end
+    end
+end
+% Average seasonal presence across repeated deployments at each site
+iS=1;
+while iS <= size(sites,1)
+    reps = strcmp(sites{iS,1},sites);
+    for iCT = 1:size(seasDat,3)
+        depDat = cell2mat(seasDat(reps,2:5,iCT));
+        depDat = num2cell(mean(depDat,'omitnan'));
+        seasDat(iS,2:5,iCT) = depDat;
+    end
+    
+    firstOccur = find(reps==1,1);
+    reps(firstOccur) = 0;
+    seasDat(reps,:,:) = [];
+    sites(reps) = [];
+    iS = iS+1;
+end
+
+
+for iCT = 1:size(spNameList,1)
+seasonalData = cell2table(seasDat(:,:,iCT),'VariableNames',{'Site','Winter','Spring',...
+    'Summer','Fall','Lat','Lon'});
+save(fullfile(seasDir,[spNameList{iCT,1} '_Seasonal_Totals_Prob' num2str(probThresh)...
+    '_PPRL' num2str(RLThresh) '_numClicks' num2str(numClicksThresh)]),'seasonalData');
+end
+
+%% Plot seasonal data
+
+fileList = dir(fullfile(seasDir,'*Seasonal_Totals*.mat'));
+
+% Plot with bubblemap legends
+for iS = 1:size(fileList,1)
+load(fullfile(seasDir,fileList(iS).name));
+ind = strfind(fileList(iS).name,'_');
+CT = fileList(iS).name(1:ind(1)-1);
+
+minbub = floor(min(min(seasonalData{:,2:5})));
+maxbub = ceil(max(max(seasonalData{:,2:5})));
+
+figure(2)
+clf
+gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Winter,...
+    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
+    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+    [241,92,34]/255);
+gb.Basemap = 'grayland';
+geolimits(lat_lims,lon_lims)
+title('Winter');
+gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Spring,...
+    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
+    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+    [241,92,34]/255);
+gb.Basemap = 'grayland';
+geolimits(lat_lims,lon_lims)
+title('Spring');
+gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Summer,...
+    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
+    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+    [241,92,34]/255);
+gb.Basemap = 'grayland';
+geolimits(lat_lims,lon_lims)
+title('Summer');
+gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Fall,...
+    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
+    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+    [241,92,34]/255);
+gb.Basemap = 'grayland';
+geolimits(lat_lims,lon_lims)
+title('Fall');
+[ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT),...
+    't',[.075 .05 .85 .89] );
+
+% if iS == 6
+%     savename = ['CT4_6_SeasonalMaps'];
+% else
+%     savename = [CT_names{iS} '_SeasonalMaps'];
+% end
+savename = [CT '_SeasonalMaps'];
+
+saveas(figure(2),fullfile(seasDir,savename),'fig')
+saveas(figure(2),fullfile(seasDir,savename),'tiff')
+
+end
+
+% % Plot without bubblemap legends
+% for iS = 1:length(CTs)
+% load(fullfile(seasDir,fileList(iS).name));
+% 
+% minbub = floor(min(min(seasonalData{:,2:5})));
+% maxbub = ceil(max(max(seasonalData{:,2:5})));
+% 
+% figure(3)
+% clf
+% gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Winter,...
+%     'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.33 0.36],...
+%     'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%     [241,92,34]/255,'LegendVisible','off');
+% gb.Basemap = 'grayland';
+% geolimits(lat_lims,lon_lims)
+% title('Winter');
+% gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Spring,...
+%     'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.33 0.36],...
+%     'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%     [241,92,34]/255,'LegendVisible','off');
+% gb.Basemap = 'grayland';
+% geolimits(lat_lims,lon_lims)
+% title('Spring');
+% gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Summer,...
+%     'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.33 0.36],...
+%     'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%     [241,92,34]/255,'LegendVisible','off');
+% gb.Basemap = 'grayland';
+% geolimits(lat_lims,lon_lims)
+% title('Summer');
+% gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Fall,...
+%     'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.33 0.36],...
+%     'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%     [241,92,34]/255,'LegendVisible','off');
+% gb.Basemap = 'grayland';
+% geolimits(lat_lims,lon_lims)
+% title('Fall');
+% [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT_names{iS}),...
+%     't',[.075 .05 .85 .89] );
+% 
+% if iS == 6
+%     savename = ['CT4_6_SeasonalMaps'];
+% else
+%     savename = [CT_names{iS} '_SeasonalMaps'];
+% end
+% % saveas(figure(3),'Seasonal CT Presence','fig')
+% saveas(figure(3),fullfile(seasDir,savename),'tiff')
+% end
 
 %% Calculate cumulative monthly hours for each site (May 2016 - Apr 2017)
 %  ******** NOT UPDATED FOR NEW DAILYTOTALS MATRICES ********
@@ -110,105 +349,6 @@ lon_lims = [-82.00 -63];
 % monDat = cell2table(monDat,'VariableNames',{'Site','Jan','Feb','Mar','Apr',...
 %     'May','Jun','Jul','Aug','Sept','Oct','Nov','Dec','Lat','Lon'});
 % save('All_Sites_Monthly_Totals','monDat');
-
-%% Calculate cumulative seasonal hours for each site
-seasDat = {}; % initialize cell array to hold seasonal data for all sites
-for i = 1:length(fileList)
-    fileName = fileList(i).name;
-    ind = strfind(fileName,'_');
-    
-    load(fullfile(dayDir,fileList(i).name));
-    dvec = datevec(dailyTots(:,1));
-    
-    for iCT = 2:20 % columns of dailyTots corresponding to NNet labels 0:18
-        
-        seasDat{i,1,iCT-1} = fileName(1:ind(2)-1); % List sites
-        
-        if any(regexp(fileName,'HAT_')) % using HAT data from a different year than the rest of the sites
-            if ~isempty(dailyTots)
-                % Sum detections by season; some months recorded twice, choose
-                % which to use by indicating year
-                win_ind = find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2);
-                a = find(dvec(:,2)>=3 & dvec(:,2)<=5);
-                b = find(dvec(:,1)==2018);
-                spr_ind = intersect(a,b);
-                c = find(dvec(:,2)>=6 & dvec(:,2)<=8);
-                d = find(dvec(:,1)==2017);
-                sum_ind = intersect(c,d);
-                fall_ind = find(dvec(:,2)>=9 & dvec(:,2)<=11);
-                
-                seasDat{i,2,iCT-1} = sum(dailyTots(win_ind,iCT));
-                seasDat{i,3,iCT-1} = sum(dailyTots(spr_ind,iCT));
-                seasDat{i,4,iCT-1} = sum(dailyTots(sum_ind,iCT));
-                seasDat{i,5,iCT-1} = sum(dailyTots(fall_ind,iCT));
-            end
-        else
-            if ~isempty(dailyTots)
-                % Sum detections by season; some months recorded twice, choose
-                % which to use by indicating year
-                win_ind = find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2);
-                a = find(dvec(:,2)==3 | dvec(:,2)==4 & dvec(:,1)==2017);
-                b = find(dvec(:,2)==5 & dvec(:,1)==2016);
-                spr_ind = sort(vertcat(a,b));
-                c = find(dvec(:,2)>=6 & dvec(:,2)<=8);
-                d = find(dvec(:,1)==2016);
-                sum_ind = intersect(c,d);
-                fall_ind = find(dvec(:,2)>=9 & dvec(:,2)<=11);
-                
-                seasDat{i,2,iCT-1} = sum(dailyTots(win_ind,iCT));
-                seasDat{i,3,iCT-1} = sum(dailyTots(spr_ind,iCT));
-                seasDat{i,4,iCT-1} = sum(dailyTots(sum_ind,iCT));
-                seasDat{i,5,iCT-1} = sum(dailyTots(fall_ind,iCT));
-            end
-        end
-        
-        % Add site lat/lon info
-        if strcmp(seasDat{i,1,iCT-1},'WAT_HZ')
-            seasDat{i,6,iCT-1} = 41.06165;
-            seasDat{i,7,iCT-1} = -66.35155;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_OC')
-            seasDat{i,6,iCT-1} = 40.22999;
-            seasDat{i,7,iCT-1} = -67.97798;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_NC')
-            seasDat{i,6,iCT-1} = 39.83295;
-            seasDat{i,7,iCT-1} = -69.98194;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_BC')
-            seasDat{i,6,iCT-1} = 39.19192;
-            seasDat{i,7,iCT-1} = -72.22735;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_WC')
-            seasDat{i,6,iCT-1} = 38.37337;
-            seasDat{i,7,iCT-1} = -73.36985;
-        elseif strcmp(seasDat{i,1,iCT-1},'NFC_A')
-            seasDat{i,6,iCT-1} = 37.16452;
-            seasDat{i,7,iCT-1} = -74.46585;
-        elseif strcmp(seasDat{i,1,iCT-1},'HAT_A')
-            seasDat{i,6,iCT-1} = 35.30183;
-            seasDat{i,7,iCT-1} = -74.87895;
-        elseif strcmp(seasDat{i,1,iCT-1},'HAT_B')
-            seasDat{i,6,iCT-1} = 35.5841;
-            seasDat{i,7,iCT-1} = -74.7499;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_GS')
-            seasDat{i,6,iCT-1} = 33.66992;
-            seasDat{i,7,iCT-1} = -75.9977;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_BP')
-            seasDat{i,6,iCT-1} = 32.10527;
-            seasDat{i,7,iCT-1} = -77.09067;
-        elseif strcmp(seasDat{i,1,iCT-1},'WAT_BS')
-            seasDat{i,6,iCT-1} = 30.58295;
-            seasDat{i,7,iCT-1} = -77.39002;
-        elseif strcmp(seasDat{i,1,iCT-1},'JAX_D')
-            seasDat{i,6,iCT-1} = 30.27818;
-            seasDat{i,7,iCT-1} = -80.22085;
-        end
-    end
-end
-
-for iCT = 1:19
-seasDat_oneCT = cell2table(seasDat(:,:,iCT),'VariableNames',{'Site','Winter','Spring',...
-    'Summer','Fall','Lat','Lon'});
-save(fullfile(seasDir,['All_Sites_Seasonal_Totals_' CTs{iCT}]),'seasDat_oneCT');
-end
-
 %% Plot monthly data
 
 % load('All_Sites_Monthly_Totals.mat');
@@ -283,111 +423,3 @@ end
 % 
 % saveas(figure(1),'Monthly CT Presence','fig')
 % saveas(figure(1),'Monthly CT Presence','tiff') 
-
-%% Plot seasonal data
-seasDir = 'G:\New_Atl_CTs\Seasonal_CT_Totals';
-fileList = dir(fullfile(seasDir,'All_Sites_Seasonal_Totals*.mat'));
-% CT_names doesn't match the order of CTs above, it matches the order in
-% which seasonal data files are read into Matlab
-CT_names = {'Blainvilles','Boats','CT10','CT2','CT3','CT4\_6','CT5','CT7','CT8','CT9',...
-    'Cuviers','Echosounder','Gervais','Kogia','Noise','Rissos','Sowerbys',...
-    'Spermwhale','Trues'};
-
-% Plot with bubblemap legends
-for i = 1:length(CTs)
-load(fullfile(seasDir,fileList(i).name));
-
-minbub = floor(min(min(seasDat_oneCT{:,2:5})));
-maxbub = ceil(max(max(seasDat_oneCT{:,2:5})));
-
-figure(2)
-clf
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Winter,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255);
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Winter');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Spring,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255);
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Spring');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Summer,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255);
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Summer');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Fall,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255);
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Fall');
-[ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT_names{i}),...
-    't',[.075 .05 .85 .89] );
-
-if i == 6
-    savename = ['CT4_6_SeasonalMaps'];
-else
-    savename = [CT_names{i} '_SeasonalMaps'];
-end
-% saveas(figure(2),'Seasonal CT Presence','fig')
-saveas(figure(2),fullfile(seasDir,savename),'tiff')
-
-end
-
-% Plot without bubblemap legends
-for i = 1:length(CTs)
-load(fullfile(seasDir,fileList(i).name));
-
-minbub = floor(min(min(seasDat_oneCT{:,2:5})));
-maxbub = ceil(max(max(seasDat_oneCT{:,2:5})));
-
-figure(3)
-clf
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Winter,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.33 0.36],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255,'LegendVisible','off');
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Winter');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Spring,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.33 0.36],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255,'LegendVisible','off');
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Spring');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Summer,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.33 0.36],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255,'LegendVisible','off');
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Summer');
-gb = geobubble(seasDat_oneCT.Lat,seasDat_oneCT.Lon,seasDat_oneCT.Fall,...
-    'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.33 0.36],...
-    'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-    [241,92,34]/255,'LegendVisible','off');
-gb.Basemap = 'grayland';
-geolimits(lat_lims,lon_lims)
-title('Fall');
-[ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season',CT_names{i}),...
-    't',[.075 .05 .85 .89] );
-
-if i == 6
-    savename = ['CT4_6_SeasonalMaps'];
-else
-    savename = [CT_names{i} '_SeasonalMaps'];
-end
-% saveas(figure(3),'Seasonal CT Presence','fig')
-saveas(figure(3),fullfile(seasDir,savename),'tiff')
-end
