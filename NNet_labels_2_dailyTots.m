@@ -2,9 +2,9 @@
 % click type presence at each site in hours.
 
 clearvars
-TPWSDir = 'G:\WAT_WC_02\TPWS'; % directory containing TPWS files
-clusDir = 'G:\WAT_WC_02\NEW_ClusterBins_120dB'; % directory containing cluster_bins output
-saveName = 'WAT_WC_02_DailyTotals'; % filename to save 
+TPWSDir = 'I:\JAX10C\TPWS'; % directory containing TPWS files
+clusDir = 'I:\JAX10C\NEW_ClusterBins_120dB'; % directory containing cluster_bins output
+saveName = 'JAX10C_DailyTotals'; % filename to save 
 NNetDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp'; % directory containing NNet training folders
 saveDir = 'G:\DailyCT_Totals'; % directory to save output
 labFlagStr = 'labFlag_0';
@@ -21,7 +21,6 @@ labelfList = dir(fullfile(labelDir,'*predLab.mat'));
 typeList = dir(NNetDir);
 typeList = typeList(3:end);
 typeList = typeList(vertcat(typeList.isdir));
-%spNameList = [{typeList(:).name}';'UO']; 
 spNameList = {typeList(:).name}'; % species names corresponding to NNet labels 
 
 % Compile labeled bins across the deployment; columns correspond to spNameList;
@@ -66,13 +65,11 @@ for iF = 1:size(clusfList,1) % for each file
     predLabels(nSpecMat<numClicksThresh)=NaN;
     
     for iS = 1:size(typeList,1) % collect bins and bin features by label
-%         labeledBins{iF,iS} = sumTimeMat(predLabels==iS,:);
         labeledBins{1,iS} = [labeledBins{1,iS};sumTimeMat(predLabels==iS,:)];
         binFeatures{1,iS} = [binFeatures{1,iS};myProbs(predLabels==iS)];
         binFeatures{2,iS} = [binFeatures{2,iS};meanPPRL(predLabels==iS)];
         binFeatures{3,iS} = [binFeatures{3,iS};nSpecMat(predLabels==iS)];
     end
-    %labeledBins{iF,size(typeList,1)+1} =  sumTimeMat(isnan(predLabels),:);
     
 end
 
