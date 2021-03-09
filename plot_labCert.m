@@ -393,9 +393,9 @@ for j = 1:size(siteCert,2)
 
          % Sort average scaled error & corresponding RL/# clicks thresholds, proportion of bins/clicks lost
         [PPRLgrid NumClicksgrid] = meshgrid(minPPRL,minNumClicks);
-%         [ordErr I] = sort(scaledErr{1,j}(:),'ascend');
-%         optThresh{1,j}(:,1) = scaledErr{1,j}(I);
-[ordErr I] = sort(meanTypeErr{1,j}(:),'ascend');
+        %         [ordErr I] = sort(scaledErr{1,j}(:),'ascend');
+        %         optThresh{1,j}(:,1) = scaledErr{1,j}(I);
+        [ordErr, I] = sort(meanTypeErr{1,j}(:),'ascend');
         optThresh{1,j}(:,1) = meanTypeErr{1,j}(I);
         optThresh{1,j}(:,2) = PPRLgrid(I);
         optThresh{1,j}(:,3) = NumClicksgrid(I);
@@ -438,4 +438,4 @@ end
 % Save
 save(fullfile(errDir,'Error_Summary.mat'),'errFiles','site','siteCert','siteRLmean',...
     'siteErr','meanTypeErr','binsEvaluated','typeCert','typeRLmean','propBinsLost',...
-    'errRange','optThresh','-v7.3');
+    'errRange','optThresh','minPPRL','minNumClicks','-v7.3');
