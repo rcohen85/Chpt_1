@@ -18,8 +18,8 @@ matchStr = '_DailyTotals_Prob0_RL120_numClicks0.mat';
 errDir = 'G:\ErrorEval'; % directory containing error summary from plot_labCert
 seasDir = 'G:\SeasonalCT_Totals'; % directory to save seasonal data
 mapDir = 'G:\SeasonalMaps';
-RLThresh = 120;
-numClicksThresh = 0;
+RLThresh = 130;
+numClicksThresh = 50;
 probThresh = 0;
 
 % Set lat/long limits to plot only your region of interest
@@ -183,9 +183,14 @@ end
 fileList = dir(fullfile(seasDir,['*Seasonal_Totals_Prob' num2str(probThresh)...
     '_PPRL' num2str(RLThresh) '_numClicks' num2str(numClicksThresh) '*']));
 
-% errBins = linspace(0,1,8);
-cMap = interp1([0;1],[0 153 0; 153 0 0]./255,linspace(0,1,7),'spline');
-cMap(8,:) = [0 0 204]./255;
+errBins = linspace(0,1,21);
+% cMap = interp1([0;1;2;3],[0 153 0; 153 153 0; 153 76 0; 153 0 0]./255,linspace(0,4,19),'spline');
+% cMap(20,:) = [0 0 204]./255;
+% cMap(cMap<0) = 0;
+% cMap(cMap>1) = 1;
+
+cMap = interp1([1:10]',[77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
+cMap(21,:) = [102 100 102]./255;
 
 % Plot and save bubblemaps
 % To plot without legends, add 'LegendVisible','off' to each call of
@@ -201,20 +206,26 @@ for iS = 1:size(fileList,1)
     
     % Sort error into error bins to determine bubble color
     if any(~isnan(seasonalData.Error))
-        errBins = linspace(min(seasonalData.Error),max(seasonalData.Error),8);
         [~,~,bin] = histcounts(seasonalData.Error,errBins);
         bin(bin==0) = NaN;
         errCategories = {};
         for iB = 1:size(bin,1)
             if ~isnan(seasonalData.Error(iB))
-                errCategories(iB) = cellstr(sprintf('%d%% - %d%%',round(errBins(bin(iB))*100), round(errBins(bin(iB)+1)*100)));
+                if errBins(bin(iB))<0.1 && errBins(bin(iB)+1)>=0.1
+                    range = cellstr(sprintf('0%d%% - %d%%',round(errBins(bin(iB))*100), round(errBins(bin(iB)+1)*100)));
+                elseif errBins(bin(iB))<0.1 && errBins(bin(iB)+1)<0.1
+                    range = cellstr(sprintf('0%d%% - 0%d%%',round(errBins(bin(iB))*100), round(errBins(bin(iB)+1)*100)));
+                else
+                    range = cellstr(sprintf('%d%% - %d%%',round(errBins(bin(iB))*100), round(errBins(bin(iB)+1)*100)));
+                end
+                errCategories(iB) = range;
             else
                 errCategories(iB) = cellstr('0');
             end
         end
         seasonalData.Error = categorical(errCategories');
         seasonalData.Error = removecats(seasonalData.Error,'0');
-        bin(isnan(bin)) = 8;
+        bin(isnan(bin)) = size(cMap,1);
         cMap_type = cMap(unique(bin),:);
     else
         seasonalData.Error = categorical(seasonalData.Error);
