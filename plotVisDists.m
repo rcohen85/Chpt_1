@@ -4,8 +4,8 @@ clear all
 
 sp = 'Gmac';
 comName = 'Short-Finned Pilot Whale';
-datDir = 'G:\OBIS_Vis_data';
-saveDir = 'G:\OBIS_Vis_data\Seasonal_Maps';
+datDir = 'J:\OBIS_Vis_data';
+saveDir = 'J:\OBIS_Vis_data\Seasonal_Maps';
 
 % Set lat/long limits to plot only your region of interest
 % lat_lims = [25.34 45.66];
@@ -210,6 +210,19 @@ dat.plat = a.platform(keep_ind);
 %% Plot seasonal sightings across all years
 % option to add total # individuals sighted per season in legend
 
+% HARP locations
+HARPs = [41.06165 -66.35155;  % WAT_HZ
+    40.22999 -67.97798;       % WAT_OC
+    39.83295 -69.98194;       % WAT_NC
+    39.19192 -72.22735;       % WAT_BC
+    38.37337 -73.36985;       % WAT_WC
+    37.16452 -74.46585;       % NFC
+    35.30183 -74.87895;       % HAT
+    33.66992 -75.9977;        % WAT_GS
+    32.10527 -77.09067;       % WAT_BP
+    30.58295 -77.39002;       % WAT_BS
+    30.27818 -80.22085];      % JAX_D
+
 % Split up sightings by season
 dvec = datevec(dat.obs_dnum);
 win_ind = (find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2));
@@ -239,8 +252,9 @@ if ~isempty(win_ind)
 else
     c = plotm(NaN,NaN);
 end
-% title('Winter');
-% set(gca,'fontSize',11);
+plotm(HARPs(:,1),HARPs(:,2),'*r','MarkerSize',6);
+title('Winter');
+set(gca,'fontSize',12);
 label1 = strcat('N = ',lwin);
 % h = legend(c,label1,'Position',[0.285 0.6 0.095 0.033]);
 % set(h,'fontSize',11)
@@ -262,8 +276,9 @@ if ~isempty(spr_ind)
 else
     c = plotm(NaN,NaN);
 end
-% title('Spring');
-% set(gca,'fontSize',11);
+plotm(HARPs(:,1),HARPs(:,2),'*r','MarkerSize',6);
+title('Spring');
+set(gca,'fontSize',11);
 label1 = strcat('N = ',lspr);
 % h = legend(c,label1,'Position',[0.71 0.6 0.095 0.033]);
 % set(h,'fontSize',11)
@@ -285,8 +300,9 @@ if ~isempty(sum_ind)
 else
     c = plotm(NaN,NaN);
 end
-% title('Summer');
-% set(gca,'fontSize',11);
+plotm(HARPs(:,1),HARPs(:,2),'*r','MarkerSize',6);
+title('Summer');
+set(gca,'fontSize',11);
 label1 = strcat('N = ',lsum);
 % h = legend(c,label1,'Position',[0.71 0.15 0.095 0.033]);
 % set(h,'fontSize',11)
@@ -309,8 +325,9 @@ if ~isempty(fall_ind)
 else
     c = plotm(NaN,NaN);
 end
-% title('Fall');
-% set(gca,'fontSize',12);
+plotm(HARPs(:,1),HARPs(:,2),'*r','MarkerSize',6);
+title('Fall');
+set(gca,'fontSize',12);
 label1 = strcat('N = ',lfall);
 % h = legend(c,label1,'Position',[0.285 0.15 0.095 0.033]);
 % set(h,'fontSize',11)
