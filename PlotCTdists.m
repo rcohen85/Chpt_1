@@ -18,7 +18,7 @@ matchStr = '_DailyTotals_Prob0_RL120_numClicks0.mat';
 errDir = 'G:\ErrorEval'; % directory containing error summary from plot_labCert
 seasDir = 'G:\SeasonalCT_Totals'; % directory to save seasonal data
 mapDir = 'G:\SeasonalMaps';
-RLThresh = 130;
+RLThresh = 120;
 numClicksThresh = 50;
 probThresh = 0;
 
@@ -189,7 +189,9 @@ errBins = linspace(0,1,21);
 % cMap(cMap<0) = 0;
 % cMap(cMap>1) = 1;
 
-cMap = interp1([1:10]',[77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
+% cMap = interp1([1:10]',[77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
+cMap = [77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;210,51,35]./255;
+cMap = vertcat(cMap, repmat([184,34,30]./255,10,1,1));
 cMap(21,:) = [102 100 102]./255;
 
 % Plot and save bubblemaps
@@ -223,12 +225,18 @@ for iS = 1:size(fileList,1)
                 errCategories(iB) = cellstr('0');
             end
         end
-        seasonalData.Error = categorical(errCategories');
-        seasonalData.Error = removecats(seasonalData.Error,'0');
+        seasonalData.ErrCats = categorical(errCategories');
+        seasonalData.ErrCats = removecats(seasonalData.ErrCats,'0');
         bin(isnan(bin)) = size(cMap,1);
         cMap_type = cMap(unique(bin),:);
+        
+        % Scale bubbles by error
+        seasonalData.Winter(~isnan(seasonalData.Error)) = seasonalData.Winter(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
+        seasonalData.Spring(~isnan(seasonalData.Error)) = seasonalData.Spring(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
+        seasonalData.Summer(~isnan(seasonalData.Error)) = seasonalData.Summer(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
+        seasonalData.Fall(~isnan(seasonalData.Error)) = seasonalData.Fall(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
     else
-        seasonalData.Error = categorical(seasonalData.Error);
+        seasonalData.ErrCats = categorical(seasonalData.Error);
         cMap_type = cMap(end,:);
     end
 
@@ -245,28 +253,28 @@ for iS = 1:size(fileList,1)
     figure(2)
     clf
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Winter,...
-        seasonalData.Error,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
         cMap_type);
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Winter');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Spring,...
-        seasonalData.Error,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
         cMap_type);
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Spring');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Summer,...
-        seasonalData.Error,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
         cMap_type);
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Summer');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Fall,...
-        seasonalData.Error,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
         cMap_type);
     gb.Basemap = 'grayland';
@@ -282,7 +290,7 @@ for iS = 1:size(fileList,1)
     
 end
 
-% % Plot without bubblemap legends (each map is bigger)
+%% Plot without bubblemap legends (each map is bigger)
 % for iS = 1:size(fileList,1)
 % load(fullfile(seasDir,fileList(iS).name));
 % ind = strfind(fileList(iS).name,'_');
