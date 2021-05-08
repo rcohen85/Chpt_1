@@ -44,7 +44,7 @@ for i = 1:size(HARPs,1)
     ind = [ind;ind1 ind2];
 end
 
-figure
+figure(1)
 colormap jet
 clims = [0 35];
 deg = char(176);
@@ -62,8 +62,9 @@ xticklabels({['80' deg],['75' deg],['70' deg], ['65' deg], ['60' deg]})
 xlabel('Longitude');
 ylabel('Latitude');
 ylabel(h,['SST (' deg 'C)']);
-title({'Atlantic Passive', 'Acoustic Monitoring Sites'});
-set(gca,'fontSize',23);
+title({'Atlantic Autonomous Passive', 'Acoustic Monitoring Sites'});
+% set(gca,'fontSize',23);
+set(gca,'fontSize',20);
 for i = 1:size(sites,2)
     if i >= 1 && i <= 5
         text(ind(i,2),ind(i,1),['  ' sites{i}],'FontSize',16,'color','m','FontWeight','bold');
@@ -74,4 +75,33 @@ for i = 1:size(sites,2)
     end
 end
 
-saveas(gcf,'Atl_HARP_Sites','tiff');
+saveas(gcf,fullfile('G:\Figures','Atl_HARP_Sites'),'tiff');
+
+%% Plot HARP locations on high resolution map
+
+
+% Atl Harp sites
+sites = {'HZ', 'OC', 'NC', 'BC', 'WC', 'NFC', 'HAT', 'GS', 'BP', 'BS', 'JAX'};
+HARPs = [41.06165 -66.35155;  % WAT_HZ
+    40.22999 -67.97798;       % WAT_OC
+    39.83295 -69.98194;       % WAT_NC
+    39.19192 -72.22735;       % WAT_BC
+    38.37337 -73.36985;       % WAT_WC
+    37.16452 -74.46585;       % NFC
+    35.30183 -74.87895;       % HAT
+    33.66992 -75.9977;        % WAT_GS
+    32.10527 -77.09067;       % WAT_BP
+    30.58295 -77.39002;       % WAT_BS
+    30.27818 -80.22085];      % JAX_D
+
+lat_lims = [26 44];
+lon_lims = [-82.00 -63];
+
+figure(1)
+gb = geobubble(HARPs(:,1),HARPs(:,2),'BubbleWidthRange',10,'BubbleColorList',[255 0 0]./255,'LegendVisible','off');
+geolimits(lat_lims,lon_lims)
+gb.Basemap = 'landcover';
+% title({'Atlantic Autonomous Passive', 'Acoustic Monitoring Sites'});
+set(gca,'FontSize',12);
+
+saveas(gcf,fullfile('G:\Figures','Atl_HARP_Sites'),'tiff');

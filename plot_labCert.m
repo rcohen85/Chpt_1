@@ -435,6 +435,11 @@ for j = 1:size(siteCert,2)
     end
 end
 
+% totEval = cell(1,size(siteCert,2));
+% for i=1:size(siteCert,2)
+% totEval{1,i} = vertcat(cell2mat(siteCert(:,i)));
+% end;
+
 % Save
 save(fullfile(errDir,'Error_Summary.mat'),'errFiles','site','siteCert','siteRLmean',...
     'siteErr','meanTypeErr','binsEvaluated','typeCert','typeRLmean','propBinsLost',...

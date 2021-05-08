@@ -26,12 +26,12 @@
 clearvars
 
 % directory containing toClassify files
-clasDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify';
+clasDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify\labels';
+labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels';
 % directory to save "flagMat" struct and plots
-savDir = 'I:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify\labels';
+savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels';
 
 NNlab = 0:19; % neural net label values
 labelThresh = 0; % only labels exceeding this confidence thresh will be saved and plotted

@@ -2,9 +2,9 @@
 % click type presence at each site in hours.
 
 clearvars
-TPWSDir = 'I:\JAX10C\TPWS'; % directory containing TPWS files
-clusDir = 'I:\JAX10C\NEW_ClusterBins_120dB'; % directory containing cluster_bins output
-saveName = 'JAX10C_DailyTotals'; % filename to save 
+TPWSDir = 'I:\HAT_B_01-03\TPWS'; % directory containing TPWS files
+clusDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB'; % directory containing cluster_bins output
+saveName = 'HAT_B_01-03_DailyTotals'; % filename to save 
 NNetDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp'; % directory containing NNet training folders
 saveDir = 'G:\DailyCT_Totals'; % directory to save output
 labFlagStr = 'labFlag_0';

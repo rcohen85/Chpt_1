@@ -3,9 +3,9 @@
 
 clearvars
 % directory containing toClassify files
-binDir = 'I:\NNet_TrainTest\New_Cluster_TrainTest\CT5';
+binDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp\CT4_6+CT10';
 % directory containing label files 
-CT = 'CT5';
+CT = 'CT4\6+CT10';
 
 binFiles = dir([binDir '\*.mat']); 
 nFiles = size(binFiles,1);

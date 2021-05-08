@@ -2,10 +2,10 @@
 
 clear all
 
-sp = 'Gmac';
-comName = 'Short-Finned Pilot Whale';
+sp = 'Sc';
+comName = 'Striped Dolphin';
 datDir = 'J:\OBIS_Vis_data';
-saveDir = 'J:\OBIS_Vis_data\Seasonal_Maps';
+saveDir = 'J:\OBIS_Vis_data\Seasonal_Maps\Best';
 
 % Set lat/long limits to plot only your region of interest
 % lat_lims = [25.34 45.66];
@@ -146,7 +146,7 @@ dat.plat = a.platform(keep_ind);
 % 
 % save('Survey_Tracks','lines');
 % save('Seasonal_Tracks','win_lines','spr_lines','sum_lines','fall_lines');
-% 
+
 
 %% Plot all sightings across all years
 % grey  = [200 200 200]./255;
@@ -342,10 +342,9 @@ set(objH(2), 'Pos', [0.08 pos(2:3)]);
 set(ax,'fontSize',14)
 
 % Save seasonal plots
-cd(saveDir)
 saveName = [sp,' Seasonal Sightings_mercator_TotIndv'];
 % saveas(figure(3),saveName,'fig')
-saveas(figure(1),saveName,'tiff') 
+saveas(figure(1),fullfile(saveDir,saveName),'tiff') 
 
 
 %% Plot seasonal sightings for particular date range
