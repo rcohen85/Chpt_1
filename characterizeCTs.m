@@ -1,14 +1,32 @@
 %% Calculate summary stats for click types used to train a neural net; plot
-% mean spectra and ICI distributions
+% mean spectra, ICI distributions, mean waveform envelopes
+% 
+% clearvars
+% 
+% 
+% 
+% clustDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB';
+% TPWSDir = 'I:\WAT_BS_01\WAT_BS_01_TPWS';
+% 
 
+
+
+
+
+%% More automated approach
 clearvars
+
 % directory containing folders with composite_clusters output training examples
 trainDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp';
 saveDir = 'G:\cluster_NNet\TrainSetSummary';
 
-%%
+%% Figure out how many clicks contributed to each class and which deployments 
+% they came from; then pick random sample from each class
+
 trainSet = dir(trainDir);
 trainSet(1:2) = [];
+ClickSummary = {};
+t = 1;
 
 for k = 1:size(trainSet,1) %for each click type
     if trainSet(k).isdir == 1
@@ -16,33 +34,63 @@ for k = 1:size(trainSet,1) %for each click type
         compClustFiles = dir([typeDir '\*.mat']);
         CT = trainSet(k).name;
         totNumClicks = 0;
-        clicksPerDep = [];
-        Dep = {};
+%         clicksPerDep = [];
+%         clickTimesPerDep = {};
+        clickTimes = [];
+        TPWS = {};
+%         Deps = {};
         
         for i = 1:size(compClustFiles,1)  % run through composite_clusters files and count how many clicks
-            if strfind(compClustFiles(i).name,'type')
+            if contains(compClustFiles(i).name,'type') && ~contains(compClustFiles(i).name,'NFC')...
+                    && ~contains(compClustFiles(i).name,'HAT') && ~contains(compClustFiles(i).name,'JAX')
                 load([typeDir '\' compClustFiles(i).name]);
                 
-                 stringGrab = compClustFiles(i).name;
+                stringGrab = compClustFiles(i).name;
                 if ~isempty(strfind(stringGrab,'Copy of '))
                     dep = strrep(stringGrab,'Copy of ','');
                 else
                     dep = stringGrab;
                 end
+                
+                edges = [thisType.Tfinal{1,7}; thisType.Tfinal{1,7}(end)+(5/(60*24))];
+                [~,~, whichBin] = histcounts(thisType.clickTimes,edges);
+                whichTPWS = TPWSList(1,thisType.fileNumExpand(whichBin))';
+                TPWS = [TPWS;TPWS];
+                totNumClicks = totNumClicks + size(thisType.clickTimes,1);
+%                 clicksPerDep = [clicksPerDep;size(thisType.clickTimes,1)];
+%                 clickTimesPerDep = [clickTimesPerDep;thisType.clickTimes];
+                clickTimes = [clickTimes;thisType.clickTimes];
+%                 Deps = [Deps;dep];
+                
 
-               totNumClicks = totNumClicks + size(thisType.clickTimes,1);
-               clicksPerDep = [clicksPerDep;size(thisType.clickTimes,1)];
-               Dep = [Dep;dep];
+
             end
         end
+              
+        ClickSummary{t,1} = CT;
+        ClickSummary{t,2} = totNumClicks;
+%         ClickSummary{t,3} = clicksPerDep;
+        ClickSummary{t,3} = clickTimes;
+        ClickSummary{t,4} = whichTPWS;
+%         ClickSummary{t,5} = Deps;
         
-        save(fullfile(saveDir,[CT '_clickSum']),'totNumClicks','clicksPerDep','Dep','-v7.3');
+%         clickInds = sort(randsample(ClickSummary{t,2},5e3));
+% %         allTimes = cell2mat(ClickSummary{t,4});
+%         sampTimes = ClickSummary{t,3}(clickInds);
+%         clickSumsAcrossDeps = [1;cumsum(ClickSummary{t,3})];
+%         [N, ~, depInd] = histcounts(clickInds, clickSumsAcrossDeps);
+%         [g gN] = grp2idx(depInd);
+%         sampClicksPerDep = splitapply(@(x){x},sampTimes(depInd),g);
+%         ClickSummary{t,6} = sampClicksPerDep;
+%         ClickSummary{t,7} = ClickSummary{t,5}(unique(depInd));
+        
+        t = t+1;
     end
 end
 
+save(fullfile(saveDir,'ClickSummary'),'ClickSummary','-v7.3');
 %%
-trainSet = dir(trainDir);
-trainSet(1:2) = [];
+
 TPWSfiles_byCT = {};
 b = 1;
 letterCode = 97:122;
