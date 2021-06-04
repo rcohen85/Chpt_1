@@ -1,194 +1,142 @@
 %% Calculate summary stats for click types used to train a neural net; plot
 % mean spectra, ICI distributions, mean waveform envelopes
-% 
+
 % clearvars
 % 
-% 
-% 
-% clustDir = 'I:\WAT_BS_01\NEW_ClusterBins_120dB';
-% TPWSDir = 'I:\WAT_BS_01\WAT_BS_01_TPWS';
-% 
-
-
-
-
-
-%% More automated approach
-clearvars
-
-% directory containing folders with composite_clusters output training examples
-trainDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp';
-saveDir = 'G:\cluster_NNet\TrainSetSummary';
+% % directory containing folders with composite_clusters output training examples
+% trainDir = 'I:\cluster_NNet\TrainSetSummary\MostRepresentativeClusters';
+% saveDir = 'I:\cluster_NNet\TrainSetSummary';
+% TPWSDirs = {'J:\','H:\HAT_B_01-03'};
+% samps = 3e3; %WARNING: make sure all classes have at least this many clicks 
+% % available or indexing will get messed up later on
 
 %% Figure out how many clicks contributed to each class and which deployments 
 % they came from; then pick random sample from each class
 
-trainSet = dir(trainDir);
-trainSet(1:2) = [];
-ClickSummary = {};
-t = 1;
-
-for k = 1:size(trainSet,1) %for each click type
-    if trainSet(k).isdir == 1
-        typeDir = fullfile(trainSet(k).folder,trainSet(k).name);
-        compClustFiles = dir([typeDir '\*.mat']);
-        CT = trainSet(k).name;
-        totNumClicks = 0;
-%         clicksPerDep = [];
-%         clickTimesPerDep = {};
-        clickTimes = [];
-        TPWS = {};
-%         Deps = {};
-        
-        for i = 1:size(compClustFiles,1)  % run through composite_clusters files and count how many clicks
-            if contains(compClustFiles(i).name,'type') && ~contains(compClustFiles(i).name,'NFC')...
-                    && ~contains(compClustFiles(i).name,'HAT') && ~contains(compClustFiles(i).name,'JAX')
-                load([typeDir '\' compClustFiles(i).name]);
-                
-                stringGrab = compClustFiles(i).name;
-                if ~isempty(strfind(stringGrab,'Copy of '))
-                    dep = strrep(stringGrab,'Copy of ','');
-                else
-                    dep = stringGrab;
-                end
-                
-                edges = [thisType.Tfinal{1,7}; thisType.Tfinal{1,7}(end)+(5/(60*24))];
-                [~,~, whichBin] = histcounts(thisType.clickTimes,edges);
-                whichTPWS = TPWSList(1,thisType.fileNumExpand(whichBin))';
-                TPWS = [TPWS;TPWS];
-                totNumClicks = totNumClicks + size(thisType.clickTimes,1);
-%                 clicksPerDep = [clicksPerDep;size(thisType.clickTimes,1)];
-%                 clickTimesPerDep = [clickTimesPerDep;thisType.clickTimes];
-                clickTimes = [clickTimes;thisType.clickTimes];
-%                 Deps = [Deps;dep];
-                
-
-
-            end
-        end
-              
-        ClickSummary{t,1} = CT;
-        ClickSummary{t,2} = totNumClicks;
-%         ClickSummary{t,3} = clicksPerDep;
-        ClickSummary{t,3} = clickTimes;
-        ClickSummary{t,4} = whichTPWS;
-%         ClickSummary{t,5} = Deps;
-        
-%         clickInds = sort(randsample(ClickSummary{t,2},5e3));
-% %         allTimes = cell2mat(ClickSummary{t,4});
-%         sampTimes = ClickSummary{t,3}(clickInds);
-%         clickSumsAcrossDeps = [1;cumsum(ClickSummary{t,3})];
-%         [N, ~, depInd] = histcounts(clickInds, clickSumsAcrossDeps);
-%         [g gN] = grp2idx(depInd);
-%         sampClicksPerDep = splitapply(@(x){x},sampTimes(depInd),g);
-%         ClickSummary{t,6} = sampClicksPerDep;
-%         ClickSummary{t,7} = ClickSummary{t,5}(unique(depInd));
-        
-        t = t+1;
-    end
-end
-
-save(fullfile(saveDir,'ClickSummary'),'ClickSummary','-v7.3');
+% trainSet = dir(trainDir);
+% trainSet(1:2) = [];
+% ClickSummary = {};
+% t = 1;
+% 
+% for k = 1:size(trainSet,1) %for each click type
+%     if trainSet(k).isdir == 1
+%         
+%         typeDir = fullfile(trainSet(k).folder,trainSet(k).name);
+%         compClustFiles = dir([typeDir '\*.mat']);
+%         CT = trainSet(k).name;
+%         totNumClicks = 0;
+%         clickTimes = [];
+%         TPWS = {};
+%         
+%         for i = 1:size(compClustFiles,1)  % run through composite_clusters files and count how many clicks
+%             if contains(compClustFiles(i).name,'type') %&& ~contains(compClustFiles(i).name,'NFC')...
+%                     %&& ~contains(compClustFiles(i).name,'HAT') && ~contains(compClustFiles(i).name,'JAX')
+%                 load([typeDir '\' compClustFiles(i).name]);
+%                 
+%                 stringGrab = compClustFiles(i).name;
+%                 if ~isempty(strfind(stringGrab,'Copy of '))
+%                     dep = strrep(stringGrab,'Copy of ','');
+%                 else
+%                     dep = stringGrab;
+%                 end
+%                 
+%                 totNumClicks = totNumClicks + size(thisType.clickTimes,1);
+%                 clickTimes = [clickTimes;thisType.clickTimes];
+%                 sortedTimes = sort(unique(thisType.Tfinal{1,7}));
+%                 edges = [sortedTimes; sortedTimes(end)+(5/(60*24))];
+%                 [~,~, whichBin] = histcounts(thisType.clickTimes,edges);
+%                 whichBin(whichBin==0) = [];
+%                 whichTPWS = TPWSList(1,thisType.fileNumExpand(whichBin))';
+%                 TPWS = [TPWS;whichTPWS];
+%                 
+%             end
+%         end
+%         
+%         ClickSummary{t,1} = CT;
+%         ClickSummary{t,2} = totNumClicks;
+%         %         ClickSummary{t,3} = clickTimes; % can't save everything, file gets huuuuuge!
+%         %         ClickSummary{t,4} = TPWS;
+%         
+%         
+%         clickInds = sort(randsample(ClickSummary{t,2},samps));
+%         ClickSummary{t,3} = clickTimes(clickInds);
+%         ClickSummary{t,4} = TPWS(clickInds);
+%         
+%         t = t+1;
+%     end
+% end
+% 
+% save(fullfile(saveDir,'ClickSummary'),'ClickSummary','-v7.3');
 %%
 
-TPWSfiles_byCT = {};
-b = 1;
-letterCode = 97:122;
+% fullFileList = [];
+% 
+% % Find all TPWS files in your directories
+% for k = 1:size(TPWSDirs,2)
+%     fileList = dir(fullfile(TPWSDirs{k},'**\*TPWS1.mat'));
+%     fullFileList = [fullFileList;fileList];
+% end
+% 
+% % figure out which files you actually need to open
+% allTPWSfiles = vertcat(ClickSummary{:,4});
+% [uniqueTPWSfiles,ia,ic] = unique(allTPWSfiles);
+% 
+% allClickTimes = vertcat(ClickSummary{:,3});
+% 
+% compiledClicks = cell(size(ClickSummary,1),6);
+% compiledClicks(1:size(ClickSummary,1),1) = ClickSummary(1:size(ClickSummary,1),1);
 
-for k = 1:size(trainSet,1) %for each click type
-    letterFlag = 0; % flag for knowing if a letter should be appended to file name
-    if trainSet(k).isdir == 1
-        typeDir = fullfile(trainSet(k).folder,trainSet(k).name);
-        compClustFiles = dir([typeDir '\*.mat']);
-        CT = trainSet(k).name;
-        clickTimes = [];
-        deployment = [];
-        depVec = [];
-        TPWSfiles = [];
-        letterInd = 1;
+% open TPWS files one at a time and grab appropriate clicks for each class
+for i = 371:size(uniqueTPWSfiles,1)
+    
+    % get filepath
+    findTPWS = strcmp({fullFileList.name},uniqueTPWSfiles{i});
+    
+    % load TPWS vars
+    if sum(findTPWS)==0 || sum(findTPWS)>1
+        fprintf('Warning: %s not found or found in multiple locations, skipping to next file\n',uniqueTPWSfiles{i});
+    elseif sum(findTPWS)==1
         
-        for i = 1:size(compClustFiles,1)  % run through composite_clusters files and pull out click times & TPWS indices
-            if strfind(compClustFiles(i).name,'type')
-                load([typeDir '\' compClustFiles(i).name]);
-                
-                stringGrab = compClustFiles(i).name;
-                if ~isempty(strfind(stringGrab,'Copy of '))
-                    dep = strrep(stringGrab,'Copy of ','');
-                else
-                    dep = stringGrab;
-                end
-                depVec = cellstr(repmat(dep,size(thisType.clickTimes,1),1));
-                
-                clickTimes = [clickTimes;thisType.clickTimes];
-                deployment = [deployment;depVec];
-                TPWSfiles = [TPWSfiles;TPWSList(unique(thisType.fileNumExpand))'];
-                TPWSfiles = unique(TPWSfiles);
-                
-                %             if i==1
-                %                 save(fullfile(saveDir,CT),'clickTimes','deployment','TPWSfiles');
-                %             else
-                %                 sC = size(clickTimes,1);
-                %                 sT = size(TPWSfiles,1);
-                %                 m = matfile(fullfile(saveDir,CT),'Writable',true);
-                %                 m.clickTimes(end+1:end+1+sC,1) = clickTimes;
-                %                 m.deployment(end+1:end+1+sC) = deployment;
-                %                 m.TPWSfiles(end+1:end+1+sT) = TPWSfiles;
-                %             end
-                if size(clickTimes,1)>5e6 || i==size(compClustFiles,1)
-                    if i == size(compClustFiles,1) && letterFlag == 0
-                        save(fullfile(saveDir,CT),'clickTimes','deployment','TPWSfiles','-v7.3');
-                    else
-                        save(fullfile(saveDir,[CT '_' letterCode(letterInd)]),'clickTimes','deployment','TPWSfiles','-v7.3');
-                        letterFlag = 1;
-                        letterInd = letterInd + 1;
-                    end
-                    clickTimes = [];
-                    deployment = [];
-                    TPWSfiles = [];
-                end
-            end
-        end
+        fprintf('Pulling clicks from file %d of %d\n',i,size(uniqueTPWSfiles,1));
+        tic
+        load(fullfile(fullFileList(findTPWS).folder,fullFileList(findTPWS).name));
+        toc
+        % find which clicks need to be saved for which classes
+        findClicks = find(strcmp(allTPWSfiles,uniqueTPWSfiles{i})); %indices of all clicks from this TPWS
+        classEdges = 1:samps:size(allTPWSfiles,1)+samps;
+        classEdges(end) = classEdges(end)-1;
+        [N,~,class] = histcounts(findClicks,classEdges); %bin these indices by class      
+        C = unique(class);
         
-        TPWSfiles_byCT{1,b} = TPWSfiles;
-        b = b+1;
-    end
-end
-
-%% Add in manually compiled bins
-for k = 1:size(trainSet,1) %for each click type
-    if trainSet(k).isdir == 1
-        typeDir = fullfile(trainSet(k).folder,trainSet(k).name);
-        compClustFiles = dir([typeDir '\*.mat']);
-        CT = trainSet(k).name;
-        clickTimes = [];
-        deployment = [];
-        depVec = [];
-        TPWSfiles = [];
-        
-        for i = 1:size(compClustFiles,1)
-            if strfind(compClustFiles(i).name,'Compiled') || strfind(compClustFiles(i).name,'Sonar')
-                
+        % save clicks to appropriate classes
+        for k = 1:size(C)
+            
+            clicksThisClass = find(class==C(k));
+            timesThisClass = allClickTimes(findClicks(clicksThisClass));
+            [~,indsThisClass,ib] = intersect(MTT,timesThisClass);
+            
+            if size(timesThisClass,1)==size(indsThisClass,1)
+                compiledClicks{C(k),2} = [compiledClicks{C(k),2};MTT(indsThisClass)];
+                compiledClicks{C(k),3} = [compiledClicks{C(k),3};MSP(indsThisClass,:)];
+                compiledClicks{C(k),4} = [compiledClicks{C(k),4};MSN(indsThisClass,:)];
+                compiledClicks{C(k),5} = [compiledClicks{C(k),5};MPP(indsThisClass)];
+                compiledClicks{C(k),6} = [compiledClicks{C(k),6};allTPWSfiles(findClicks(clicksThisClass))];
+            else
+                fprintf('  Didn''t locate the correct number of clicks for class %d\n',C(k));
+                compiledClicks{C(k),2} = [compiledClicks{C(k),2};MTT(indsThisClass)];
+                compiledClicks{C(k),3} = [compiledClicks{C(k),3};MSP(indsThisClass,:)];
+                compiledClicks{C(k),4} = [compiledClicks{C(k),4};MSN(indsThisClass,:)];
+                compiledClicks{C(k),5} = [compiledClicks{C(k),5};MPP(indsThisClass)];
+                compiledClicks{C(k),6} = [compiledClicks{C(k),6};allTPWSfiles(findClicks(clicksThisClass(ib)))];
             end
         end
     end
-end
-%% Run through TPWS and pull out click spectra, ICI, PPRL, & time
-% series; save each CT separately; save periodically
-
-CTclicks = struct('MTT',[],'MSN',[],'MPP',[],'DTT',[]);
-
-%for WAT deployments
-TPWSfileind = unique(TKTK);
-for i = 1:size(TPWSfileind,1)
     
+    if mod(i,10)==0
+       save(fullfile(saveDir,'CompiledClicks'),'compiledClicks','-v7.3');
+    end
 end
 
-%for HAT, NFC, & JAX deployments
-
-TPWSfileind = unique(TKTK);
-for i = 1:size(TPWSfileind,1)
-    
-end
 %% Compute summary statistics for each CT
 summaryStats = struct('CT',[],'MeanSpecs',[],'ICIdists',[],'PeakFreq',[],'BW_3dB',[]);
 
