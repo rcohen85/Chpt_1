@@ -1,23 +1,25 @@
 %% Find bins of each class which were apparently misclassified by the neural
-% net and plot spectra and ICI to determine if they were mistakenly
+% net and plot spectra and ICI dists to determine if they were mistakenly
 % included in their respective test sets to begin with (e.g. some bin specs
-% included in the sperm whale train/test set are actually boats which have
-% been misclassified by the clustering or manual labeling step)
+% included in the sperm whale train/test set are actually boats which were
+% misclassified by the clustering or manual labeling step)
 
-% Update this section for each new test output and each class you wish to
+% Update this section for each new test run and each class you wish to
 % consider
 
 baseDir = 'I:\cluster_NNet\TrainTest'; % folder where test set lives
 testDir = fullfile(baseDir,'20200721-155130'); % folder where nnet output lives
-load(fullfile(baseDir,'TestSet_MSPICIWV_500_noReps.mat')); % update name of testing data file
-load(fullfile(testDir,'TestOutput'));
-testOut = double(testOut'+1);
+testFile =  'TestSet_MSPICIWV_500_noReps.mat';% name of testing data file
 
 n = 500; % number of training examples of each class
 sp = 'Sperm\_Whale';
 lab = 19; % label of class of interest in test label set
 
 %%
+load(fullfile(baseDir,testFile)); % load testing data
+load(fullfile(testDir,'TestOutput')); % load test output
+testOut = double(testOut'+1);
+
 ind = (lab-1)*n+1:lab*n; % indices of class of interest in test set
 outName = ['Misclassed_' sp];
 
@@ -34,15 +36,19 @@ for i = 1:length(q)
     text(60,0.85,{'Predicted',['Label: ', num2str(testOut(q(i)))]});
     xlabel('Frequency (kHz)');
     ylabel('Normalized Amplitude');
+    title('Bin Spectrum');
     
     subplot(1,2,2)
       bar(0:0.01:1,testMSPICIWV(q(i),190:290));
     text(0.6,0.85,{'Predicted',['Label: ', num2str(testOut(q(i)))]});
     xlim([0 1]);
+    xticks([0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]);
+    xticklabels({'0.1','0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9'})
     xlabel('Seconds');
     ylabel('Counts');
+    title('Bin ICI Distribution')
     
-    suplabel(['Misclassified Bin ',num2str(i),' of ',num2str(length(q))],'t');
+    suplabel(['''Misclassified'' Bin ',num2str(i),' of ',num2str(length(q))],'t');
     
     % take user input to decide if NNet label is correct or not
     a = input('Enter 1 for correct, 0 for incorrect, or 2 for uncertain\n');

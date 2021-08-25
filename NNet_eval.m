@@ -5,17 +5,15 @@ clearvars
 baseDir = 'I:\cluster_NNet\TrainTest';
 load(fullfile(baseDir,'TestSet_MSPICIWV_500_noReps.mat')); % update name of testing data file
 q = 500; % # test examples per class
-testDir = fullfile(baseDir,'20200721-155130'); % update folder where NNet output was saved
-cd(testDir);
-load('TestOutput')
-testOut = testOut+1;
+testDir = fullfile(baseDir,'20200803-091722'); % update folder where NNet output was saved
 f = 5.5:0.5:99;
 %labels = [1:9,11,13,14,16:19];
 types = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT4\6+CT10','CT5',...
     'CT8','Cuvier''s','Gervais''','GoM\_Gervais','HFA','Kogia','MFA',...
     'MultiFreq\_Sonar','Risso''s','SnapShrimp','Sowerby''s','SpermWhale','True''s'};
 
-
+load(fullfile(testDir,'TestOutput'))
+testOut = testOut+1;
 
 %% Confusion Matrix
 % True labels are rows, predicted labels are columns
