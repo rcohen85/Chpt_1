@@ -94,14 +94,20 @@ HARPs = [41.06165 -66.35155;  % WAT_HZ
     30.58295 -77.39002;       % WAT_BS
     30.27818 -80.22085];      % JAX_D
 
-lat_lims = [26 44];
+% pos = [1530 735 100 40];
+
+lat_lims = [24 46];
 lon_lims = [-82.00 -63];
 
-figure(1)
+h = figure(1)
 gb = geobubble(HARPs(:,1),HARPs(:,2),'BubbleWidthRange',10,'BubbleColorList',[255 0 0]./255,'LegendVisible','off');
 geolimits(lat_lims,lon_lims)
 gb.Basemap = 'landcover';
 % title({'Atlantic Autonomous Passive', 'Acoustic Monitoring Sites'});
 set(gca,'FontSize',12);
+% for i = 1:size(sites,2)
+%    t = uicontrol(h,'Style','text','String',sites{i},'Position',pos);
+% end
 
-saveas(gcf,fullfile('G:\Figures','Atl_HARP_Sites'),'tiff');
+saveas(gcf,fullfile('I:\Figures','Atl_HARP_Sites'),'tiff');
+print('-painters','-depsc',fullfile('I:\Figures','Atl_HARP_Sites'));
