@@ -13,11 +13,11 @@
 clearvars
 
 % Load daily totals at each site
-dayDir = 'G:\DailyCT_Totals'; % directory containing CT daily totals for each site
+dayDir = 'I:\DailyCT_Totals'; % directory containing CT daily totals for each site
 matchStr = '_DailyTotals_Prob0_RL120_numClicks0.mat';
-errDir = 'G:\ErrorEval'; % directory containing error summary from plot_labCert
-seasDir = 'G:\SeasonalCT_Totals'; % directory to save seasonal data
-mapDir = 'G:\SeasonalMaps';
+errDir = 'I:\ErrorEval'; % directory containing error summary from plot_labCert
+seasDir = 'I:\SeasonalCT_Totals'; % directory to save seasonal data
+mapDir = 'I:\SeasonalMaps';
 RLThresh = 120;
 numClicksThresh = 50;
 probThresh = 0;
@@ -189,14 +189,19 @@ errBins = linspace(0,1,21);
 % cMap(cMap<0) = 0;
 % cMap(cMap>1) = 1;
 
-% cMap = interp1([1:10]',[77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
-cMap = [77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;210,51,35]./255;
-cMap = vertcat(cMap, repmat([184,34,30]./255,10,1,1));
+% Uniformly spaced blue to red colormap:
+cMap = interp1([1:10]',[77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
+% Blue to red, reds stretched to occupy half the scale
+% cMap = [77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;210,51,35]./255;
+% cMap = vertcat(cMap, repmat([184,34,30]./255,10,1,1));
+% Uniformly spaced purple to red colormap:
+% cMap = interp1([1:10]',[133,46,114;
+%     77,138,198;84,158,179;96,171,158;119,183,125;166,190,84;209,181,65;228,156,57;230,121,50;223,72,40;184,34,30]./255,linspace(0,10,20),'spline');
 cMap(21,:) = [102 100 102]./255;
 
+
 % Plot and save bubblemaps
-% To plot without legends, add 'LegendVisible','off' to each call of
-% geobubble
+% To plot without legends, add 'LegendVisible','off' to each call of geobubble
 for iS = 1:size(fileList,1)
     load(fullfile(seasDir,fileList(iS).name));
     ind = strfind(fileList(iS).name,'_');
@@ -207,7 +212,10 @@ for iS = 1:size(fileList,1)
     end
     
     % Sort error into error bins to determine bubble color
-    if any(~isnan(seasonalData.Error))
+    if any(isnan(seasonalData.Error)) % if there are missing error values, plot all bubbles as gray
+        seasonalData.ErrCats = categorical(seasonalData.Error);
+        cMap_type = cMap(end,:);
+    else % if there are error values for each site, plot bubble color as error
         [~,~,bin] = histcounts(seasonalData.Error,errBins);
         bin(bin==0) = NaN;
         errCategories = {};
@@ -235,9 +243,6 @@ for iS = 1:size(fileList,1)
         seasonalData.Spring(~isnan(seasonalData.Error)) = seasonalData.Spring(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
         seasonalData.Summer(~isnan(seasonalData.Error)) = seasonalData.Summer(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
         seasonalData.Fall(~isnan(seasonalData.Error)) = seasonalData.Fall(~isnan(seasonalData.Error)).*(1-seasonalData.Error(~isnan(seasonalData.Error)));
-    else
-        seasonalData.ErrCats = categorical(seasonalData.Error);
-        cMap_type = cMap(end,:);
     end
 
 %     if any(~isnan(bin))
@@ -250,43 +255,80 @@ for iS = 1:size(fileList,1)
     minbub = floor(min(min(seasonalData{:,2:5})));
     maxbub = ceil(max(max(seasonalData{:,2:5})));
     
-    figure(2)
+%     figure(2) %Plot in grid
+%     clf
+%     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Winter,...
+%         seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
+%         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%         cMap_type);
+%     gb.Basemap = 'grayland';
+%     geolimits(lat_lims,lon_lims)
+%     title('Winter');
+%     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Spring,...
+%         seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
+%         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%         cMap_type);
+%     gb.Basemap = 'grayland';
+%     geolimits(lat_lims,lon_lims)
+%     title('Spring');
+%     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Summer,...
+%         seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
+%         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%         cMap_type);
+%     gb.Basemap = 'grayland';
+%     geolimits(lat_lims,lon_lims)
+%     title('Summer');
+%     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Fall,...
+%         seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
+%         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
+%         cMap_type);
+%     gb.Basemap = 'grayland';
+%     geolimits(lat_lims,lon_lims)
+%     title('Fall');
+%     [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season\nConf Min: %d, Mean PPRL Min: %d, # Clicks Min: %d',CT,probThresh,RLThresh,numClicksThresh),...
+%         't',[.075 .05 .85 .89] );
+% %     e = input('Enter to save figure and continue' );
+
+    figure(2) % Plot in line
     clf
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Winter,...
-        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.525 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.05 0.12 0.175 0.7],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-        cMap_type);
+        cMap_type,'LegendVisible','off');
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Winter');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Spring,...
-        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.525 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.28 0.12 0.175 0.7],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-        cMap_type);
+        cMap_type,'LegendVisible','off');
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Spring');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Summer,...
-        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.575 0.075 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.51 0.12 0.175 0.7],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
-        cMap_type);
+        cMap_type,'LegendVisible','off');
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Summer');
     gb = geobubble(seasonalData.Lat,seasonalData.Lon,seasonalData.Fall,...
-        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.15 0.075 0.25 0.35],...
+        seasonalData.ErrCats,'BubbleWidthRange',[2 20],'InnerPosition',[0.74 0.12 0.175 0.7],...
         'ScalebarVisible','off','SizeLimits',[minbub maxbub],'BubbleColorList',...
         cMap_type);
     gb.Basemap = 'grayland';
     geolimits(lat_lims,lon_lims)
     title('Fall');
-    [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season\nConf Min: %d, Mean PPRL Min: %d, # Clicks Min: %d',CT,probThresh,RLThresh,numClicksThresh),...
-        't',[.075 .05 .85 .89] );
+%     [ax,h3]=suplabel(sprintf('%s\nCumulative Hours Per Season\nConf Min: %d, Mean PPRL Min: %d, # Clicks Min: %d',CT,probThresh,RLThresh,numClicksThresh),...
+%         't',[.075 .05 .85 .89] );
+    [ax,h3]=suplabel(CT,'t',[.06 .03 .85 .89]);
+    set(ax,'fontSize',14);
 %     e = input('Enter to save figure and continue' );
     
     savename = strrep(fileList(iS).name,'Seasonal_Totals','Seasonal_Maps');
     savename = strrep(savename,'.mat','');
-    saveas(figure(2),fullfile(mapDir,savename),'tiff')
+    saveas(figure(2),fullfile(mapDir,savename),'tiff');
+    print('-painters','-depsc',fullfile(mapDir,savename));
     
 end
 
