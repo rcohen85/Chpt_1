@@ -1,11 +1,11 @@
 % Use cluster_bins output and corresponding NNet labels to calculate daily
-% click type presence at each site in hours.
+% click type presence at each site in hours (5-min resolution).
 
 clearvars
-TPWSDir = 'I:\HAT_B_01-03\TPWS'; % directory containing TPWS files
-clusDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB'; % directory containing cluster_bins output
-saveName = 'HAT_B_01-03_DailyTotals'; % filename to save 
-NNetDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp'; % directory containing NNet training folders
+TPWSDir = 'J:\WAT_BC_03\TPWS'; % directory containing TPWS files
+clusDir = 'J:\WAT_BC_03\ClusterBins'; % directory containing cluster_bins output
+saveName = 'WAT_B_03_HourlyTotals'; % filename to save 
+NNetDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp'; % directory containing NNet training folders
 saveDir = 'G:\DailyCT_Totals'; % directory to save output
 labFlagStr = 'labFlag_0';
 RLThresh = 120;
@@ -85,6 +85,8 @@ for iCT = 1:size(spNameList,1) % for each CT
     [N,~,bin] = histcounts(binDays,[dvec,dvec(end)+1]); % sort bins into days of the deployment
     dailyTots(:,iCT+1) = N*0.0833;
 end
+
+dailyTots = sortrows(dailyTots);
 
 save(fullfile(saveDir,[saveName '_Prob' num2str(probThresh) '_RL' num2str(RLThresh) '_numClicks' num2str(numClicksThresh)]),...
     'spNameList','RLThresh','numClicksThresh','probThresh','labeledBins','binFeatures','dailyTots');
