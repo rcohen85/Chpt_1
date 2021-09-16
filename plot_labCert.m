@@ -1,14 +1,18 @@
 clearvars
-labCertDir = 'I:\HAT_B_04-05_err\labCert';
-clasDir = 'I:\HAT_B_04-05_err\toClassify';
-labDir = 'I:\HAT_B_04-05_err\labels';
-errDir = 'G:\ErrorEval';
+labCertDir = 'J:\WAT_HZ_04\TPWS';
+clasDir = 'J:\WAT_HZ_04\ClusterBins\ToClassify';
+labDir = 'J:\WAT_HZ_04\ClusterBins\ToClassify\labels';
+errDir = 'I:\ErrorEval';
 savDir = fullfile(labCertDir,'LabelCert_Plots');
-dep = 'HAT\_B\_04-05';
+dep = 'WAT\_HZ\_04';
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
     'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
     'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
     'Sperm Whale','Trues'};
+% CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
+%     'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
+%     'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
+%     'Sperm Whale','Trues','AtlGervais+GoMGervais'};
 f = 5:0.5:98.5;
 t = 0:.01:1;
 
@@ -17,84 +21,84 @@ minNumClicks = [0 20 35 50 75]';
 
 %% Compile data from multiple labCert files
 
-% if ~isdir(savDir)
-%     mkdir(savDir)
-% end
-%     
-%     labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
-%     
-%     setCert = cell(1,size(CTs,2));
-%     setRLmax = cell(1,size(CTs,2));
-%     setRLmean = cell(1,size(CTs,2));
-%     setSpecs = cell(1,size(CTs,2));
-%     setICI = cell(1,size(CTs,2));
-%     setWavEnv = cell(1,size(CTs,2));
-%     
-%     for i = 1:size(labCertFiles,1)
-%         load(fullfile(labCertDir,labCertFiles(i).name),'labelCertainty','RL');
-%         load(fullfile(clasDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_toClassify')));
-%         load(fullfile(labDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_predLab')));
-%         
-%         for j = 1:size(RL,2)
-%             
-%             setCert{1,j} = [setCert{1,j};labelCertainty{1,j}];
-%             setRLmax{1,j} = [setRLmax{1,j};RL{1,j}];
-%             setRLmean{1,j} = [setRLmean{1,j};RL{2,j}];
-%             
-%             if ~isempty(setCert{1,j})
-%                 
-%                 binTimes = setCert{1,j}(:,1);
-%                 binInd = ismember(sumTimeMat(:,1),binTimes);
-%                 binInd(predLabels~=j-1)=0;
-%                 
-%                 % find cases of multiple spectra in one bin and average
-%                 % them (THIS WILL ONLY AVERAGE 2 SPECS, IF 3 OR MORE SPECS
-%                 % IN THE SAME BIN HAVE THE SAME LABEL SOME WILL BE LEFT OUT
-%                 % OF THE AVERAGE)
-%                 specTimes = sumTimeMat(binInd);
-%                 [C, ia, ic] = unique(specTimes);
-%                 reps = setdiff(1:numel(specTimes),ia);
-%                 
-%                 if ~isempty(reps)
-%                     specs = toClassify(binInd,1:188);
-%                     thisICI = toClassify(binInd,190:290);
-%                     wavEnvs = toClassify(binInd,292:491);
-%                     nspec = nSpecMat(binInd);
-%                     
-%                     multRep = find(diff(reps)==1); % find consecutive values in reps
-%                     if any(multRep)
-%                         % ADD CODE TO DEAL WITH 3+ SPECS WITH SAME LABEL
-%                     else
-%                         for k = 1:size(reps,2) % average & normalize specs, ICI, & waveform envelopes for repeated bins
-%                             meanSpec = (specs(reps(k)-1,:)*nspec(reps(k)-1))+(specs(reps(k),:)*nspec(reps(k)))/2;
-%                             specNorm = meanSpec-min(meanSpec);
-%                             specs(reps(k)-1,:) = specNorm./max(specNorm);
-%                             meanICI = (thisICI(reps(k)-1,:)*nspec(reps(k)-1))+(thisICI(reps(k),:)*nspec(reps(k)))/2;
-%                             ICInorm = meanICI-min(meanICI);
-%                             thisICI(reps(k)-1,:) = ICInorm./max(ICInorm);
-%                             meanEnvs = (wavEnvs(reps(k)-1,:)*nspec(reps(k)-1))+(wavEnvs(reps(k),:)*nspec(reps(k)))/2;
-%                             Envsnorm = meanEnvs-min(meanEnvs);
-%                             wavEnvs(reps(k)-1,:) = Envsnorm./max(Envsnorm);
-%                         end
-%                     end
-%                     specs(reps,:) = [];
-%                     thisICI(reps,:) = [];
-%                     wavEnvs(reps,:) = [];
-%                     setSpecs{1,j} = [setSpecs{1,j};specs];
-%                     setICI{1,j} = [setICI{1,j};thisICI];
-%                     setWavEnv{1,j} = [setWavEnv{1,j};wavEnvs];
-%                     
-%                 else
-%                     setSpecs{1,j} = [setSpecs{1,j};toClassify(binInd,1:188)];
-%                     setICI{1,j} = [setICI{1,j};toClassify(binInd,190:290)];
-%                     setWavEnv{1,j} = [setWavEnv{1,j};toClassify(binInd,292:491)];
-%                 end
-%             end
-%             
-%         end
-%     end
-%     
-%     save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
+if ~isdir(savDir)
+    mkdir(savDir)
+end
+    
+    labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
+    
+    setCert = cell(1,size(CTs,2));
+    setRLmax = cell(1,size(CTs,2));
+    setRLmean = cell(1,size(CTs,2));
+    setSpecs = cell(1,size(CTs,2));
+    setICI = cell(1,size(CTs,2));
+    setWavEnv = cell(1,size(CTs,2));
+    
+    for i = 1:size(labCertFiles,1)
+        load(fullfile(labCertDir,labCertFiles(i).name),'labelCertainty','RL');
+        load(fullfile(clasDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_toClassify')));
+        load(fullfile(labDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_predLab')));
+        
+        for j = 1:size(RL,2)
+            
+            setCert{1,j} = [setCert{1,j};labelCertainty{1,j}];
+            setRLmax{1,j} = [setRLmax{1,j};RL{1,j}];
+            setRLmean{1,j} = [setRLmean{1,j};RL{2,j}];
+            
+            if ~isempty(setCert{1,j})
+                
+                binTimes = setCert{1,j}(:,1);
+                binInd = ismember(sumTimeMat(:,1),binTimes);
+                binInd(predLabels~=j-1)=0;
+                
+                % find cases of multiple spectra in one bin and average
+                % them (THIS WILL ONLY AVERAGE 2 SPECS, IF 3 OR MORE SPECS
+                % IN THE SAME BIN HAVE THE SAME LABEL SOME WILL BE LEFT OUT
+                % OF THE AVERAGE)
+                specTimes = sumTimeMat(binInd);
+                [C, ia, ic] = unique(specTimes);
+                reps = setdiff(1:numel(specTimes),ia);
+                
+                if ~isempty(reps)
+                    specs = toClassify(binInd,1:188);
+                    thisICI = toClassify(binInd,190:290);
+                    wavEnvs = toClassify(binInd,292:491);
+                    nspec = nSpecMat(binInd);
+                    
+                    multRep = find(diff(reps)==1); % find consecutive values in reps
+                    if any(multRep)
+                        % ADD CODE TO DEAL WITH 3+ SPECS WITH SAME LABEL
+                    else
+                        for k = 1:size(reps,2) % average & normalize specs, ICI, & waveform envelopes for repeated bins
+                            meanSpec = (specs(reps(k)-1,:)*nspec(reps(k)-1))+(specs(reps(k),:)*nspec(reps(k)))/2;
+                            specNorm = meanSpec-min(meanSpec);
+                            specs(reps(k)-1,:) = specNorm./max(specNorm);
+                            meanICI = (thisICI(reps(k)-1,:)*nspec(reps(k)-1))+(thisICI(reps(k),:)*nspec(reps(k)))/2;
+                            ICInorm = meanICI-min(meanICI);
+                            thisICI(reps(k)-1,:) = ICInorm./max(ICInorm);
+                            meanEnvs = (wavEnvs(reps(k)-1,:)*nspec(reps(k)-1))+(wavEnvs(reps(k),:)*nspec(reps(k)))/2;
+                            Envsnorm = meanEnvs-min(meanEnvs);
+                            wavEnvs(reps(k)-1,:) = Envsnorm./max(Envsnorm);
+                        end
+                    end
+                    specs(reps,:) = [];
+                    thisICI(reps,:) = [];
+                    wavEnvs(reps,:) = [];
+                    setSpecs{1,j} = [setSpecs{1,j};specs];
+                    setICI{1,j} = [setICI{1,j};thisICI];
+                    setWavEnv{1,j} = [setWavEnv{1,j};wavEnvs];
+                    
+                else
+                    setSpecs{1,j} = [setSpecs{1,j};toClassify(binInd,1:188)];
+                    setICI{1,j} = [setICI{1,j};toClassify(binInd,190:290)];
+                    setWavEnv{1,j} = [setWavEnv{1,j};toClassify(binInd,292:491)];
+                end
+            end
+            
+        end
+    end
+    
+    save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
     
 %% Plot
 
@@ -287,7 +291,10 @@ errFiles = dir(fullfile(errDir,'*setCertainty.mat'));
 site = {};
 siteCert = {};
 siteRLmean = {};
-
+binsPerSeason = {};
+offset = 0;
+figure(99), clf
+hold on
 for i = 1:size(errFiles,1)
     site{i,1} = strrep(errFiles(i).name,'_setCertainty.mat','');
     load(fullfile(errDir,errFiles(i).name),'setCert');
@@ -295,7 +302,41 @@ for i = 1:size(errFiles,1)
     for j = 1:size(setCert,2)
         siteCert{i,j} = setCert{1,j};
         siteRLmean{i,j} = setRLmean{1,j};
+        
+        % Divide bins by season
+        if ~isempty(setCert{1,j})
+            dvec = datevec(setCert{1,j}(:,1));
+            win_ind = find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2);
+            spr_ind = find(dvec(:,2)>=3 & dvec(:,2)<=5);
+            sum_ind = find(dvec(:,2)>=6 & dvec(:,2)<=8);
+            fall_ind = find(dvec(:,2)>=9 & dvec(:,2)<=11);
+            
+            binsPerSeason{i,j} = [numel(win_ind),numel(spr_ind),numel(sum_ind),numel(fall_ind)];
+        else
+            binsPerSeason{i,j} = [];
+        end
     end
+    
+    if ~contains(site{i,1},'JAX10C') && ~contains(site{i,1},'USWTR')
+        allbins = vertcat(setCert{1,:});
+        allbins = allbins(:,1);
+        figure(99)
+        plot(allbins,zeros(size(allbins,1),1)-offset,'*')
+        offset = offset+1;
+    end
+end
+
+figure(99)
+datetick
+yticks([-35:1:0]);
+yticklabels(site);
+hold off
+
+% Combine Atl Gervais & GoM Gervais
+for l = 1:size(site,1)
+    siteCert{l,21} = vertcat(siteCert{l,10},siteCert{l,11});
+    siteRLmean{l,21} = vertcat(siteRLmean{l,10},siteRLmean{l,11});
+    binsPerSeason{l,21} = sum(vertcat(binsPerSeason{l,10},binsPerSeason{l,11}),1);
 end
 
 siteErr = cell(size(siteCert,1),size(siteCert,2));
@@ -303,7 +344,7 @@ binsEvaluated = cell(size(siteCert,1),size(siteCert,2));
 typeCert = cell(1,size(siteCert,2));
 typeRLmean = cell(1,size(siteCert,2));
 propBinsLost = cell(1,size(siteCert,2));
-% propClicksLost = cell(1,size(siteCert,2));
+propClicksLost = cell(1,size(siteCert,2));
 errRange = cell(size(siteErr,1),size(siteErr,2));
 meanTypeErr = cell(1,size(siteCert,2));
 optThresh = cell(1,size(siteCert,2));
@@ -352,7 +393,7 @@ for j = 1:size(siteCert,2)
          % Calculate proportion of bins retained at each RL/# clicks thresh combo
          propbins = [];
          propclicks = [];
-%          totClicks = sum(typeCert{1,j}(:,3));
+         totClicks = sum(typeCert{1,j}(:,3));
          for k = 1:length(minNumClicks)
              for l = 1:length(minPPRL)
                  % find bins that meet minPPRL and minNumClicks criteria
@@ -363,15 +404,15 @@ for j = 1:size(siteCert,2)
                  
                  if ~isempty(goodInd)
                      propbins(k,l) = 1-(size(goodInd,1)./size(typeCert{1,j},1));
-%                      propclicks(k,l) = 1-(goodClicks./totClicks);
+                     propclicks(k,l) = 1-(goodClicks./totClicks);
                  else
                      propbins(k,l) = NaN;
-%                      propclicks(k,l) = NaN;
+                     propclicks(k,l) = NaN;
                  end
              end
          end
          propBinsLost{1,j} = propbins;
-%          propClicksLost{1,j} = propclicks;
+         propClicksLost{1,j} = propclicks;
          
          for i = 1:size(siteErr,1)
                  q = [min(min(siteErr{i,j})),max(max(siteErr{i,j}))];
@@ -400,11 +441,11 @@ for j = 1:size(siteCert,2)
         optThresh{1,j}(:,2) = PPRLgrid(I);
         optThresh{1,j}(:,3) = NumClicksgrid(I);
         optThresh{1,j}(:,4) = propBinsLost{1,j}(I);
-%         optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
+        optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
         
         figure(999), clf
         % Plot averaged scaled error surface
-        subplot(1,2,1)
+        subplot(1,3,1)
         surf(minPPRL,minNumClicks,meanTypeErr{1,j})
         zlim([0 1]);
         xlabel('Min PPRL');
@@ -412,21 +453,21 @@ for j = 1:size(siteCert,2)
         zlabel('Error');
         title([CTs{j},' Mean Error']);    
         % Plot proportion of bins lost
-        subplot(1,2,2)
+        subplot(1,3,2)
         surf(minPPRL,minNumClicks,propBinsLost{1,j})
         zlim([0 1]);
         xlabel('Min PPRL');
         ylabel('Min # Clicks');
         zlabel('Proportion lost');
         title([CTs{j},' Proportion of Bins Lost']);
-%         % Plot proportion of clicks retained
-%         subplot(1,3,3)
-%         surf(minPPRL,minNumClicks,propClicksLost{1,j})
-%         zlim([0 1]);
-%         xlabel('Min PPRL');
-%         ylabel('Min # Clicks');
-%         zlabel('Proportion lost');
-%         title([CTs{j},' Proportion of Clicks Lost']);
+        % Plot proportion of clicks retained
+        subplot(1,3,3)
+        surf(minPPRL,minNumClicks,propClicksLost{1,j})
+        zlim([0 1]);
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Proportion lost');
+        title([CTs{j},' Proportion of Clicks Lost']);
         e = input('Enter to save figure and continue' );
         saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
     else
@@ -435,12 +476,7 @@ for j = 1:size(siteCert,2)
     end
 end
 
-% totEval = cell(1,size(siteCert,2));
-% for i=1:size(siteCert,2)
-% totEval{1,i} = vertcat(cell2mat(siteCert(:,i)));
-% end;
-
 % Save
-save(fullfile(errDir,'Error_Summary.mat'),'errFiles','site','siteCert','siteRLmean',...
+save(fullfile(errDir,'Error_Summary.mat'),'CTs','errFiles','site','siteCert','siteRLmean',...
     'siteErr','meanTypeErr','binsEvaluated','typeCert','typeRLmean','propBinsLost',...
-    'errRange','optThresh','minPPRL','minNumClicks','-v7.3');
+    'propClicksLost','errRange','optThresh','minPPRL','minNumClicks','binsPerSeason','-v7.3');
