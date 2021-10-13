@@ -13,19 +13,21 @@
 clearvars
 
 % Load daily totals at each site
-dayDir = 'I:\DailyCT_Totals'; % directory containing CT daily totals for each site
-matchStr = '_DailyTotals_Prob0_RL120_numClicks0.mat';
-errDir = 'I:\ErrorEval'; % directory containing error summary from plot_labCert
-seasDir = 'I:\SeasonalCT_Totals'; % directory to save seasonal data
-mapDir = 'I:\SeasonalMaps';
-RLThresh = 120;
-numClicksThresh = 50;
-probThresh = 0;
+dayDir = 'I:\DailyCT_Totals\minClicks50'; % directory containing CT daily totals for each site
+matchStr = '_DailyTotals_Prob0_RL120_numClicks50.mat';
+errDir = 'J:\ErrorEval'; % directory containing error summary from plot_labCert
+seasDir = 'J:\SeasonalCT_Totals\minClicks50'; % directory to save seasonal data
+mapDir = 'J:\SeasonalMaps\minClicks50';
 
 % Set lat/long limits to plot only your region of interest
 lat_lims = [26 44];
 lon_lims = [-82.00 -63];
 
+% NOTE: These must be the same as in dailyTots files, script is not set up
+% to filter data based on new thresholds
+RLThresh = 120;
+numClicksThresh = 50;
+probThresh = 0;
 %% Calculate cumulative seasonal hours for each site
 fileList = dir(fullfile(dayDir,['*' matchStr]));
 siteList = cellstr(char(fileList(:).name));
@@ -51,6 +53,7 @@ fall_dur = numel(find(yearVec(:,2)>=9 & yearVec(:,2)<=11));
 for iS = 1:size(fileList,1) % for each DailyTotals file
     
     load(fullfile(dayDir,fileList(iS).name),'dailyTots','binFeatures','spNameList');
+%     load(fullfile(dayDir,fileList(iS).name));
     dvec = datevec(dailyTots(:,1));
     
     for iCT = 1:size(dailyTots,2)-1 % for each label
@@ -59,10 +62,10 @@ for iS = 1:size(fileList,1) % for each DailyTotals file
         
         if ~isempty(dailyTots)
             
-            % Remove bins not meeting thresholds
-            dailyTots(binFeatures{1,iCT}<probThresh,iCT+1) = NaN;
-            dailyTots(binFeatures{2,iCT}<RLThresh,iCT+1) = NaN;
-            dailyTots(binFeatures{3,iCT}<numClicksThresh,iCT+1) = NaN;
+%             % THIS ISN'T RIGHT - Remove bins not meeting thresholds
+%             dailyTots(binFeatures{1,iCT}<probThresh,iCT+1) = NaN;
+%             dailyTots(binFeatures{2,iCT}<RLThresh,iCT+1) = NaN;
+%             dailyTots(binFeatures{3,iCT}<numClicksThresh,iCT+1) = NaN;
             
             % Divide bins by season
             win_ind = find(dvec(:,2)==12 | dvec(:,2)==1 | dvec(:,2)==2);
