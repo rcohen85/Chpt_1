@@ -7,10 +7,10 @@
 
 
 clearvars
-inDir = 'J:\WAT_BC_01\NEW_ClusterBins_120dB\ToClassify'; % directory containing ToClassify files
-baseDir = 'G:\cluster_NNet\Set_w_Combos_HighAmp';
-saveName = 'WAT_BC_01_DailyTotals'; % filename to save 
-saveDir = 'G:\DailyCT_Totals';
+inDir = 'J:\WAT_BC_03\ClusterBins\ToClassify'; % directory containing ToClassify files
+baseDir = 'I:\cluster_NNet\Set_w_Combos_HighAmp';
+saveName = 'WAT_BC_04_HourlyTotals'; % filename to save 
+saveDir = 'H:\HourlyCT_Totals';
 RLThresh = 120;
 numClicksThresh = 0;
 probThresh = 0;

@@ -105,9 +105,9 @@ geolimits(lat_lims,lon_lims)
 gb.Basemap = 'landcover';
 % title({'Atlantic Autonomous Passive', 'Acoustic Monitoring Sites'});
 set(gca,'FontSize',12);
-% for i = 1:size(sites,2)
-%    t = uicontrol(h,'Style','text','String',sites{i},'Position',pos);
-% end
+for i = 1:size(sites,2)
+   t = uicontrol(h,'Style','text','String',sites{i},'Position',(HARPs(i,:)+[0 1]));
+end
 
 saveas(gcf,fullfile('I:\Figures','Atl_HARP_Sites'),'tiff');
 print('-painters','-depsc',fullfile('I:\Figures','Atl_HARP_Sites'));

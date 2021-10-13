@@ -1,7 +1,7 @@
 % recalculate mean RL in linear space
 
 clearvars
-labCertDir = 'I:\USWTR02B\TPWS';
+labCertDir = 'H:\WAT_OC_02\WAT_OC_02_TPWS';
 labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
 
 for i = 1:size(labCertFiles,1)
@@ -10,6 +10,7 @@ for i = 1:size(labCertFiles,1)
     load(fullfile(labCertDir,strrep(labCertFiles(i).name,'labCert','TPWS1')),'MTT','MPP');
     load(fullfile(labCertDir,strrep(labCertFiles(i).name,'labCert','ID1')));
     binTimes = (floor(MTT(1)):datenum([0,0,0,0,5,0]):ceil(MTT(end)))';
+    RL = cell(2,size(labelCertainty,2));
     
     for j = 1:size(labelCertainty,2) % for each click type
         if ~isempty(labelCertainty{1,j}) % if any bins were evaluated for this type
@@ -23,7 +24,8 @@ for i = 1:size(labCertFiles,1)
                 clickRLs = MPP(timesInTPWS); % get RLs of clicks
                 clickRLs_lin = 10.^(clickRLs./20); % return to linear space
                 meanRL = 20*log10(mean(clickRLs_lin)); % average and revert to log space
-                RL{2,j}(k) = meanRL; % replace incorrectly calculated mean RL
+                RL{1,j}(k,1) = max(clickRLs);
+                RL{2,j}(k,1) = meanRL; % replace incorrectly calculated mean RL
                 
             end
         end

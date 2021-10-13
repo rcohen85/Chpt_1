@@ -26,18 +26,18 @@
 clearvars
 
 % directory containing toClassify files
-clasDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify';
+clasDir = 'J:\JAX_D_14\clusterBins\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels';
+labDir = 'J:\JAX_D_14\clusterBins\ToClassify\labels';
 % directory to save "flagMat" struct and plots
-savDir = 'I:\HAT_B_01-03\NEW_ClusterBins_120dB\ToClassify\labels';
+savDir = 'J:\JAX_D_14\clusterBins\ToClassify\labels';
 
 NNlab = 0:19; % neural net label values
 labelThresh = 0; % only labels exceeding this confidence thresh will be saved and plotted
 specInd = 1:188; % indices of spectra in toClassify files
 iciInd = 190:290; % indices of ICI dists in toClassify files
-envInd = (292:491); % indices of mean waveform envelopes in toClassify files
+envInd = 292:491; % indices of mean waveform envelopes in toClassify files
 f = 5:0.5:98.5; % freq vector corresponding to spectra
 t = 0:.01:1; % time vector corresponding to ICI distributions
 
@@ -56,97 +56,97 @@ savname = {'Blainvilles','Boats','CT11','CT2+CT9','CT3+CT7','CT4_6+CT10',...
 
 %% Create flagMat struct with all mean spectra organized by label
 
-clasFiles = dir(fullfile(clasDir,'*toClassify.mat'));
-labFiles = dir(fullfile(labDir,'*predLab.mat'));
-nFiles = size(clasFiles,1);
-nn = length(NNlab);
-
-% initialize struct to hold bin times, spectra, ICI dists, mean waveform 
-% envelopes, cell each spectrum occupies in cluster_bins output, 
-% label confidence, and deployment info, etc.
-flagMat = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
-    'Env',[],'File',[],'WhichCell',[],'Probs',[],'nSpec',[],'Flag',[]);
-for i = 1:nn
-    flagMat(i).CT = savname{i};
-    flagMat(i).NNet_Lab = NNlab(i);
-end
-
-% load one cluster & corresponding label file at a time, pull out desired
-% info for each NNet label
-for i=1:nFiles
-    load(fullfile(clasDir, clasFiles(i).name));
-    load(fullfile(labDir, labFiles(i).name));
-    
-    q = isnan(probs);
-    if sum(sum(q))>0
-    fprintf('WARNING: NaN label probabilities in %s, \nthese labels will not be retained.\n',labFiles(i).name);
-    fprintf('Press any key to continue:\n');
-    pause
-    end
-    
-    stringGrab = clasFiles(i).name;
-    stringGrab = erase(stringGrab,suffix);
-    
-    for j=1:nn
-        % find bins labeled with target label, with prob > labelThresh
-        labInd = find(predLabels==NNlab(j));
-        labInd = labInd(probs(labInd,j)>=labelThresh);
-        
-        % If high confidence labels exist, find times of labeled bins
-        if ~isempty(labInd)
-            if exist('toClassify')
-                labTime = sumTimeMat(labInd,1);
-                labSpec = toClassify(labInd,specInd);
-                labICI = toClassify(labInd,iciInd);
-                labEnv = toClassify(labInd,envInd);
-                labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
-                labCell = whichCell(labInd);
-                labProbs = probs(labInd,j);
-                nSpec = nSpecMat(labInd);
-            else
-                fprintf('Error: Don''t recognize variable names\n');
-                return
-            end
-            
-            flagMat(j).BinTimes = [flagMat(j).BinTimes;labTime];
-            flagMat(j).BinSpecs = [flagMat(j).BinSpecs;labSpec];
-            flagMat(j).ICI = [flagMat(j).ICI;labICI];
-            flagMat(j).Env = [flagMat(j).Env;labEnv];
-            flagMat(j).File = [flagMat(j).File;labFile];
-            flagMat(j).WhichCell = [flagMat(j).WhichCell;labCell];
-            flagMat(j).Probs = [flagMat(j).Probs;labProbs];
-            flagMat(j).nSpec = [flagMat(j).nSpec;nSpec];
-        end
-        
-    end
-    fprintf('Done with file %d of %d\n',i,nFiles);
-end
-
-% Sort bins into chronological order within each label, repeated bins are ordered based on values of WhichCell
-for j = 1:nn
-    times_unsorted = [vertcat(flagMat(j).BinTimes),vertcat(flagMat(j).WhichCell)];
-    [B, sortInd] = sortrows(times_unsorted); 
-    
-    flagMat(j).BinTimes = flagMat(j).BinTimes(sortInd);
-    flagMat(j).BinSpecs = flagMat(j).BinSpecs(sortInd,:);
-    flagMat(j).ICI = flagMat(j).ICI(sortInd,:);
-    flagMat(j).Env = flagMat(j).Env(sortInd,:);
-    flagMat(j).File = flagMat(j).File(sortInd,:);
-    flagMat(j).WhichCell = flagMat(j).WhichCell(sortInd);
-    flagMat(j).Probs = flagMat(j).Probs(sortInd);
-    flagMat(j).nSpec = flagMat(j).nSpec(sortInd);
-end
-
-save(fullfile(labDir,['FlagMat_' num2str(labelThresh*100)]),'flagMat','labelThresh','f','t','-v7.3');
-
+% clasFiles = dir(fullfile(clasDir,'*toClassify.mat'));
+% labFiles = dir(fullfile(labDir,'*predLab.mat'));
+% nFiles = size(clasFiles,1);
+% nn = length(NNlab);
+% 
+% % initialize struct to hold bin times, spectra, ICI dists, mean waveform 
+% % envelopes, cell each spectrum occupies in cluster_bins output, 
+% % label confidence, and deployment info, etc.
+% flagMat = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
+%     'Env',[],'File',[],'WhichCell',[],'Probs',[],'nSpec',[],'Flag',[]);
+% for i = 1:nn
+%     flagMat(i).CT = savname{i};
+%     flagMat(i).NNet_Lab = NNlab(i);
+% end
+% 
+% % load one cluster & corresponding label file at a time, pull out desired
+% % info for each NNet label
+% for i=1:nFiles
+%     load(fullfile(clasDir, clasFiles(i).name));
+%     load(fullfile(labDir, labFiles(i).name));
+%     
+%     q = isnan(probs);
+%     if sum(sum(q))>0
+%     fprintf('WARNING: NaN label probabilities in %s, \nthese labels will not be retained.\n',labFiles(i).name);
+%     fprintf('Press any key to continue:\n');
+%     pause
+%     end
+%     
+%     stringGrab = clasFiles(i).name;
+%     stringGrab = erase(stringGrab,suffix);
+%     
+%     for j=1:nn
+%         % find bins labeled with target label, with prob > labelThresh
+%         labInd = find(predLabels==NNlab(j));
+%         labInd = labInd(probs(labInd,j)>=labelThresh);
+%         
+%         % If high confidence labels exist, find times of labeled bins
+%         if ~isempty(labInd)
+%             if exist('toClassify')
+%                 labTime = sumTimeMat(labInd,1);
+%                 labSpec = toClassify(labInd,specInd);
+%                 labICI = toClassify(labInd,iciInd);
+%                 labEnv = toClassify(labInd,envInd);
+%                 labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
+%                 labCell = whichCell(labInd);
+%                 labProbs = probs(labInd,j);
+%                 nSpec = nSpecMat(labInd);
+%             else
+%                 fprintf('Error: Don''t recognize variable names\n');
+%                 return
+%             end
+%             
+%             flagMat(j).BinTimes = [flagMat(j).BinTimes;labTime];
+%             flagMat(j).BinSpecs = [flagMat(j).BinSpecs;labSpec];
+%             flagMat(j).ICI = [flagMat(j).ICI;labICI];
+%             flagMat(j).Env = [flagMat(j).Env;labEnv];
+%             flagMat(j).File = [flagMat(j).File;labFile];
+%             flagMat(j).WhichCell = [flagMat(j).WhichCell;labCell];
+%             flagMat(j).Probs = [flagMat(j).Probs;labProbs];
+%             flagMat(j).nSpec = [flagMat(j).nSpec;nSpec];
+%         end
+%         
+%     end
+%     fprintf('Done with file %d of %d\n',i,nFiles);
+% end
+% 
+% % Sort bins into chronological order within each label, repeated bins are ordered based on values of WhichCell
+% for j = 1:nn
+%     times_unsorted = [vertcat(flagMat(j).BinTimes),vertcat(flagMat(j).WhichCell)];
+%     [B, sortInd] = sortrows(times_unsorted); 
+%     
+%     flagMat(j).BinTimes = flagMat(j).BinTimes(sortInd);
+%     flagMat(j).BinSpecs = flagMat(j).BinSpecs(sortInd,:);
+%     flagMat(j).ICI = flagMat(j).ICI(sortInd,:);
+%     flagMat(j).Env = flagMat(j).Env(sortInd,:);
+%     flagMat(j).File = flagMat(j).File(sortInd,:);
+%     flagMat(j).WhichCell = flagMat(j).WhichCell(sortInd);
+%     flagMat(j).Probs = flagMat(j).Probs(sortInd);
+%     flagMat(j).nSpec = flagMat(j).nSpec(sortInd);
+% end
+% 
+% % save(fullfile(labDir,['FlagMat_' num2str(labelThresh*100)]),'flagMat','labelThresh','f','t','-v7.3');
+% 
 %% Plot bins by label, sorted by peak frequency, and ask for user input to 
-% determine how to flag labels
+% % determine how to flag labels
 
 temp = struct('CT',[],'BinTimes',[],'WhichCell',[],'Flag',[]);
 
 N = length(CTs);
 
-for i = 1:N %for each CT, determine which labels to keep and which to flag
+for i = [10,11,18]%1:N %for each CT, determine which labels to keep and which to flag
     if ~isempty(flagMat(i).BinTimes)
         catSpecs = vertcat(flagMat(i).BinSpecs);
         [~, maxind] = max(catSpecs,[],2);
@@ -312,7 +312,7 @@ files = files(I);
 % flag = flags(I);
 % cells = cells(I);
 
-for iA = 1:length(clasFiles) %for each toClassify file
+for iA = 1:size(clasFiles,1) %for each toClassify file
         
         load(fullfile(clasDir,clasFiles(iA).name),'sumTimeMat');
         
@@ -321,30 +321,56 @@ for iA = 1:length(clasFiles) %for each toClassify file
         stringGrab = erase(stringGrab,suffix);
         
         % find bin times and corresponding flags and cells for this file
-        thisFile = strcmp(files,stringGrab);
-        thisFileTimes = times(thisFile,1);
-        thisFileFlags = flags(thisFile);
-        thisFileCells = cells(thisFile);
+        newFile = strcmp(files,stringGrab);
+        thisFileTimes = times(newFile,1);
+        thisFileFlags = flags(newFile);
+        thisFileCells = cells(newFile);
         
-        % add flags into labFlag matrix of all bin times in this file
-        % any spectra without a flag in flagMat are automatically flagged 0
-        % (i.e. single-click bins or spectra whose label confidences were < labelThresh)
-        labFlag = sumTimeMat(:,1);
-        
-        iB = 1;
-        while iB <= length(thisFileTimes) % how to vectorize this?
-            r = find(thisFileTimes == thisFileTimes(iB)); % how many spectra from this bin were retained?
-            q = find(labFlag == thisFileTimes(iB)); % indices of all spectra originally in this bin in toClassify & predLab files
-            for iC = 1:length(r)
-                cellInd = iB+iC-1;
-                thisCell = q(thisFileCells(cellInd)); % index of original cell of this spectrum
-                labFlag(thisCell,2) = thisFileFlags(cellInd);
+        if ~isempty(thisFileTimes)
+            % add flags into labFlag matrix of all bin times in this file
+            % any spectra without a flag in flagMat are automatically flagged 0
+            % (i.e. single-click bins or spectra whose label confidences were < labelThresh)
+            labFlag = sumTimeMat(:,1);
+%             labFlag(:,2) = 0;
+            
+            iB = 1;
+            while iB <= length(thisFileTimes) % how to vectorize this?
+                r = find(thisFileTimes == thisFileTimes(iB)); % how many spectra from this bin were retained?
+                q = find(labFlag == thisFileTimes(iB)); % indices of all spectra originally in this bin in toClassify & predLab files
+                for iC = 1:length(r)
+                    cellInd = iB+iC-1;
+                    thisCell = q(thisFileCells(cellInd)); % index of original cell of this spectrum
+                    labFlag(thisCell,2) = thisFileFlags(cellInd);
+                end
+                iB = iB + length(r);
             end
-            iB = iB + length(r);
+            
+            name = strrep(clasFiles(iA).name,'toClassify',['labFlag_' num2str(labelThresh*100)]);
+            save(fullfile(labDir,name),'labFlag','labelThresh','-v7.3');
         end
-        
-        name = strrep(clasFiles(iA).name,'toClassify',['labFlag_' num2str(labelThresh*100)]);
-        save(fullfile(labDir,name),'labFlag','labelThresh','-v7.3');
-        
 end
+
+
+%% Combine labFlag files
+% 
+% flagFiles = dir(fullfile(labDir,['*labFlag_' num2str(labelThresh*100),'_new.mat']));
+% newDir = fullfile(labDir,'New_labFlags');
+% mkdir(newDir);
+% 
+% for iA = 1:size(flagFiles,1)
+%     
+%     newFile = flagFiles(iA).name;
+%     oldFile = strrep(newFile, '_new.mat', '.mat');
+%     
+%     orig = load(fullfile(labDir,oldFile));
+%     new = load(fullfile(labDir,newFile));
+%     labFlag = orig.labFlag(:,1);
+%     labFlag(:,2) = orig.labFlag(:,2) + new.labFlag(:,2);
+%     labFlag(labFlag(:,2)>0,2) = 1;
+%     
+%     save(fullfile(newDir,oldFile),'labFlag','labelThresh','-v7.3');
+% end
+
+
+
 

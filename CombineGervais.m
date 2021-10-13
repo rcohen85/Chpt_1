@@ -1,4 +1,4 @@
-fileList = dir(fullfile('I:\DailyCT_Totals','*.mat'));
+fileList = dir(fullfile('H:\DailyCT_Totals\minClicks50','*.mat'));
 
 for i = 1:size(fileList,1)
     

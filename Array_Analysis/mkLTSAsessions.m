@@ -63,7 +63,7 @@ end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Make LTSA.mat file for each TPWS file found
-for iD = 1:length(fileMatchIdx)
+for iD = 33%1:length(fileMatchIdx)
     
     %% Find files and load data
     % Find if TPWS file exist
