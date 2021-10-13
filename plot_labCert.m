@@ -1,10 +1,10 @@
-clearvars
-labCertDir = 'J:\WAT_HZ_04\TPWS';
-clasDir = 'J:\WAT_HZ_04\ClusterBins\ToClassify';
-labDir = 'J:\WAT_HZ_04\ClusterBins\ToClassify\labels';
+% clearvars
+labCertDir = 'J:\HAT_B_04-05_combined\labCert';
+clasDir = 'J:\HAT_B_04-05_combined\cluster_bins\ToClassify';
+labDir = 'J:\HAT_B_04-05_combined\cluster_bins\ToClassify\labels';
 errDir = 'I:\ErrorEval';
 savDir = fullfile(labCertDir,'LabelCert_Plots');
-dep = 'WAT\_HZ\_04';
+dep = 'HAT\_B\_04-05';
 CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
     'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
     'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
@@ -99,7 +99,7 @@ end
     end
     
     save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
-    
+    save(fullfile(errDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
 %% Plot
 
 % for i = 1:size(setCert,2)
@@ -293,8 +293,8 @@ siteCert = {};
 siteRLmean = {};
 binsPerSeason = {};
 offset = 0;
-figure(99), clf
-hold on
+% figure(99), clf
+% hold on
 for i = 1:size(errFiles,1)
     site{i,1} = strrep(errFiles(i).name,'_setCertainty.mat','');
     load(fullfile(errDir,errFiles(i).name),'setCert');
@@ -320,17 +320,17 @@ for i = 1:size(errFiles,1)
     if ~contains(site{i,1},'JAX10C') && ~contains(site{i,1},'USWTR')
         allbins = vertcat(setCert{1,:});
         allbins = allbins(:,1);
-        figure(99)
-        plot(allbins,zeros(size(allbins,1),1)-offset,'*')
-        offset = offset+1;
+%         figure(99)
+%         plot(allbins,zeros(size(allbins,1),1)-offset,'*')
+%         offset = offset+1;
     end
 end
 
-figure(99)
-datetick
-yticks([-35:1:0]);
-yticklabels(site);
-hold off
+% figure(99)
+% datetick
+% yticks([-35:1:0]);
+% yticklabels(site);
+% hold off
 
 % Combine Atl Gervais & GoM Gervais
 for l = 1:size(site,1)
@@ -443,33 +443,33 @@ for j = 1:size(siteCert,2)
         optThresh{1,j}(:,4) = propBinsLost{1,j}(I);
         optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
         
-        figure(999), clf
-        % Plot averaged scaled error surface
-        subplot(1,3,1)
-        surf(minPPRL,minNumClicks,meanTypeErr{1,j})
-        zlim([0 1]);
-        xlabel('Min PPRL');
-        ylabel('Min # Clicks');
-        zlabel('Error');
-        title([CTs{j},' Mean Error']);    
-        % Plot proportion of bins lost
-        subplot(1,3,2)
-        surf(minPPRL,minNumClicks,propBinsLost{1,j})
-        zlim([0 1]);
-        xlabel('Min PPRL');
-        ylabel('Min # Clicks');
-        zlabel('Proportion lost');
-        title([CTs{j},' Proportion of Bins Lost']);
-        % Plot proportion of clicks retained
-        subplot(1,3,3)
-        surf(minPPRL,minNumClicks,propClicksLost{1,j})
-        zlim([0 1]);
-        xlabel('Min PPRL');
-        ylabel('Min # Clicks');
-        zlabel('Proportion lost');
-        title([CTs{j},' Proportion of Clicks Lost']);
-        e = input('Enter to save figure and continue' );
-        saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
+%         figure(999), clf
+%         % Plot averaged scaled error surface
+%         subplot(1,3,1)
+%         surf(minPPRL,minNumClicks,meanTypeErr{1,j})
+%         zlim([0 1]);
+%         xlabel('Min PPRL');
+%         ylabel('Min # Clicks');
+%         zlabel('Error');
+%         title([CTs{j},' Mean Error']);    
+%         % Plot proportion of bins lost
+%         subplot(1,3,2)
+%         surf(minPPRL,minNumClicks,propBinsLost{1,j})
+%         zlim([0 1]);
+%         xlabel('Min PPRL');
+%         ylabel('Min # Clicks');
+%         zlabel('Proportion lost');
+%         title([CTs{j},' Proportion of Bins Lost']);
+%         % Plot proportion of clicks retained
+%         subplot(1,3,3)
+%         surf(minPPRL,minNumClicks,propClicksLost{1,j})
+%         zlim([0 1]);
+%         xlabel('Min PPRL');
+%         ylabel('Min # Clicks');
+%         zlabel('Proportion lost');
+%         title([CTs{j},' Proportion of Clicks Lost']);
+%         e = input('Enter to save figure and continue' );
+%         saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
     else
         propBinsLost{1,j} = [];
         meanTypeErr{1,j} = [];
