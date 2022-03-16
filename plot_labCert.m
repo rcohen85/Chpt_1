@@ -1,18 +1,18 @@
-% clearvars
-labCertDir = 'J:\HAT_B_04-05_combined\labCert';
-clasDir = 'J:\HAT_B_04-05_combined\cluster_bins\ToClassify';
-labDir = 'J:\HAT_B_04-05_combined\cluster_bins\ToClassify\labels';
+clearvars
+labCertDir = 'J:\WAT_WC_02\TPWS';
+clasDir = 'J:\WAT_WC_02\NEW_ClusterBins_120dB\ToClassify';
+labDir = 'J:\WAT_WC_02\NEW_ClusterBins_120dB\ToClassify\labels';
 errDir = 'I:\ErrorEval';
 savDir = fullfile(labCertDir,'LabelCert_Plots');
-dep = 'HAT\_B\_04-05';
-CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
-    'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
-    'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
-    'Sperm Whale','Trues'};
+dep = 'WAT\_WC\_02';
 % CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
 %     'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
 %     'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
-%     'Sperm Whale','Trues','AtlGervais+GoMGervais'};
+%     'Sperm Whale','Trues'};
+CTs = {'Blainville''s','Boats','CT11','CT2+CT9','CT3+CT7','CT46+CT10',...
+    'CT5','CT8','Cuviers','Gervais','GoM Gervais','HFA','Kogia',...
+    'MFA','MultiFreq Sonar','Rissos','SnapShrimp','Sowerbys',...
+    'Sperm Whale','Trues','AtlGervais+GoMGervais'};
 f = 5:0.5:98.5;
 t = 0:.01:1;
 
@@ -20,86 +20,86 @@ minPPRL = [120 122 125 127 130];
 minNumClicks = [0 20 35 50 75]';
 
 %% Compile data from multiple labCert files
-
-if ~isdir(savDir)
-    mkdir(savDir)
-end
-    
-    labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
-    
-    setCert = cell(1,size(CTs,2));
-    setRLmax = cell(1,size(CTs,2));
-    setRLmean = cell(1,size(CTs,2));
-    setSpecs = cell(1,size(CTs,2));
-    setICI = cell(1,size(CTs,2));
-    setWavEnv = cell(1,size(CTs,2));
-    
-    for i = 1:size(labCertFiles,1)
-        load(fullfile(labCertDir,labCertFiles(i).name),'labelCertainty','RL');
-        load(fullfile(clasDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_toClassify')));
-        load(fullfile(labDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_predLab')));
-        
-        for j = 1:size(RL,2)
-            
-            setCert{1,j} = [setCert{1,j};labelCertainty{1,j}];
-            setRLmax{1,j} = [setRLmax{1,j};RL{1,j}];
-            setRLmean{1,j} = [setRLmean{1,j};RL{2,j}];
-            
-            if ~isempty(setCert{1,j})
-                
-                binTimes = setCert{1,j}(:,1);
-                binInd = ismember(sumTimeMat(:,1),binTimes);
-                binInd(predLabels~=j-1)=0;
-                
-                % find cases of multiple spectra in one bin and average
-                % them (THIS WILL ONLY AVERAGE 2 SPECS, IF 3 OR MORE SPECS
-                % IN THE SAME BIN HAVE THE SAME LABEL SOME WILL BE LEFT OUT
-                % OF THE AVERAGE)
-                specTimes = sumTimeMat(binInd);
-                [C, ia, ic] = unique(specTimes);
-                reps = setdiff(1:numel(specTimes),ia);
-                
-                if ~isempty(reps)
-                    specs = toClassify(binInd,1:188);
-                    thisICI = toClassify(binInd,190:290);
-                    wavEnvs = toClassify(binInd,292:491);
-                    nspec = nSpecMat(binInd);
-                    
-                    multRep = find(diff(reps)==1); % find consecutive values in reps
-                    if any(multRep)
-                        % ADD CODE TO DEAL WITH 3+ SPECS WITH SAME LABEL
-                    else
-                        for k = 1:size(reps,2) % average & normalize specs, ICI, & waveform envelopes for repeated bins
-                            meanSpec = (specs(reps(k)-1,:)*nspec(reps(k)-1))+(specs(reps(k),:)*nspec(reps(k)))/2;
-                            specNorm = meanSpec-min(meanSpec);
-                            specs(reps(k)-1,:) = specNorm./max(specNorm);
-                            meanICI = (thisICI(reps(k)-1,:)*nspec(reps(k)-1))+(thisICI(reps(k),:)*nspec(reps(k)))/2;
-                            ICInorm = meanICI-min(meanICI);
-                            thisICI(reps(k)-1,:) = ICInorm./max(ICInorm);
-                            meanEnvs = (wavEnvs(reps(k)-1,:)*nspec(reps(k)-1))+(wavEnvs(reps(k),:)*nspec(reps(k)))/2;
-                            Envsnorm = meanEnvs-min(meanEnvs);
-                            wavEnvs(reps(k)-1,:) = Envsnorm./max(Envsnorm);
-                        end
-                    end
-                    specs(reps,:) = [];
-                    thisICI(reps,:) = [];
-                    wavEnvs(reps,:) = [];
-                    setSpecs{1,j} = [setSpecs{1,j};specs];
-                    setICI{1,j} = [setICI{1,j};thisICI];
-                    setWavEnv{1,j} = [setWavEnv{1,j};wavEnvs];
-                    
-                else
-                    setSpecs{1,j} = [setSpecs{1,j};toClassify(binInd,1:188)];
-                    setICI{1,j} = [setICI{1,j};toClassify(binInd,190:290)];
-                    setWavEnv{1,j} = [setWavEnv{1,j};toClassify(binInd,292:491)];
-                end
-            end
-            
-        end
-    end
-    
-    save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
-    save(fullfile(errDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
+% 
+% if ~isdir(savDir)
+%     mkdir(savDir)
+% end
+%     
+%     labCertFiles = dir(fullfile(labCertDir,'*labCert.mat'));
+%     
+%     setCert = cell(1,size(CTs,2));
+%     setRLmax = cell(1,size(CTs,2));
+%     setRLmean = cell(1,size(CTs,2));
+%     setSpecs = cell(1,size(CTs,2));
+%     setICI = cell(1,size(CTs,2));
+%     setWavEnv = cell(1,size(CTs,2));
+%     
+%     for i = 1:size(labCertFiles,1)
+%         load(fullfile(labCertDir,labCertFiles(i).name),'labelCertainty','RL');
+%         load(fullfile(clasDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_toClassify')));
+%         load(fullfile(labDir,strrep(labCertFiles(i).name,'labCert','clusters_PR95_PPmin120_predLab')));
+%         
+%         for j = 1:size(RL,2)
+%             
+%             setCert{1,j} = [setCert{1,j};labelCertainty{1,j}];
+%             setRLmax{1,j} = [setRLmax{1,j};RL{1,j}];
+%             setRLmean{1,j} = [setRLmean{1,j};RL{2,j}];
+%             
+%             if ~isempty(setCert{1,j})
+%                 
+%                 binTimes = setCert{1,j}(:,1);
+%                 binInd = ismember(sumTimeMat(:,1),binTimes);
+%                 binInd(predLabels~=j-1)=0;
+%                 
+%                 % find cases of multiple spectra in one bin and average
+%                 % them (THIS WILL ONLY AVERAGE 2 SPECS, IF 3 OR MORE SPECS
+%                 % IN THE SAME BIN HAVE THE SAME LABEL SOME WILL BE LEFT OUT
+%                 % OF THE AVERAGE)
+%                 specTimes = sumTimeMat(binInd);
+%                 [C, ia, ic] = unique(specTimes);
+%                 reps = setdiff(1:numel(specTimes),ia);
+%                 
+%                 if ~isempty(reps)
+%                     specs = toClassify(binInd,1:188);
+%                     thisICI = toClassify(binInd,190:290);
+%                     wavEnvs = toClassify(binInd,292:491);
+%                     nspec = nSpecMat(binInd);
+%                     
+%                     multRep = find(diff(reps)==1); % find consecutive values in reps
+%                     if any(multRep)
+%                         % ADD CODE TO DEAL WITH 3+ SPECS WITH SAME LABEL
+%                     else
+%                         for k = 1:size(reps,2) % average & normalize specs, ICI, & waveform envelopes for repeated bins
+%                             meanSpec = (specs(reps(k)-1,:)*nspec(reps(k)-1))+(specs(reps(k),:)*nspec(reps(k)))/2;
+%                             specNorm = meanSpec-min(meanSpec);
+%                             specs(reps(k)-1,:) = specNorm./max(specNorm);
+%                             meanICI = (thisICI(reps(k)-1,:)*nspec(reps(k)-1))+(thisICI(reps(k),:)*nspec(reps(k)))/2;
+%                             ICInorm = meanICI-min(meanICI);
+%                             thisICI(reps(k)-1,:) = ICInorm./max(ICInorm);
+%                             meanEnvs = (wavEnvs(reps(k)-1,:)*nspec(reps(k)-1))+(wavEnvs(reps(k),:)*nspec(reps(k)))/2;
+%                             Envsnorm = meanEnvs-min(meanEnvs);
+%                             wavEnvs(reps(k)-1,:) = Envsnorm./max(Envsnorm);
+%                         end
+%                     end
+%                     specs(reps,:) = [];
+%                     thisICI(reps,:) = [];
+%                     wavEnvs(reps,:) = [];
+%                     setSpecs{1,j} = [setSpecs{1,j};specs];
+%                     setICI{1,j} = [setICI{1,j};thisICI];
+%                     setWavEnv{1,j} = [setWavEnv{1,j};wavEnvs];
+%                     
+%                 else
+%                     setSpecs{1,j} = [setSpecs{1,j};toClassify(binInd,1:188)];
+%                     setICI{1,j} = [setICI{1,j};toClassify(binInd,190:290)];
+%                     setWavEnv{1,j} = [setWavEnv{1,j};toClassify(binInd,292:491)];
+%                 end
+%             end
+%             
+%         end
+%     end
+%     
+%     save(fullfile(savDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
+%     save(fullfile(errDir,[strrep(dep,'\','') '_setCertainty']),'setCert','setSpecs','setICI','setWavEnv','setRLmax','setRLmean');
 %% Plot
 
 % for i = 1:size(setCert,2)
@@ -443,33 +443,33 @@ for j = 1:size(siteCert,2)
         optThresh{1,j}(:,4) = propBinsLost{1,j}(I);
         optThresh{1,j}(:,5) = propClicksLost{1,j}(I);
         
-%         figure(999), clf
-%         % Plot averaged scaled error surface
-%         subplot(1,3,1)
-%         surf(minPPRL,minNumClicks,meanTypeErr{1,j})
-%         zlim([0 1]);
-%         xlabel('Min PPRL');
-%         ylabel('Min # Clicks');
-%         zlabel('Error');
-%         title([CTs{j},' Mean Error']);    
-%         % Plot proportion of bins lost
-%         subplot(1,3,2)
-%         surf(minPPRL,minNumClicks,propBinsLost{1,j})
-%         zlim([0 1]);
-%         xlabel('Min PPRL');
-%         ylabel('Min # Clicks');
-%         zlabel('Proportion lost');
-%         title([CTs{j},' Proportion of Bins Lost']);
-%         % Plot proportion of clicks retained
-%         subplot(1,3,3)
-%         surf(minPPRL,minNumClicks,propClicksLost{1,j})
-%         zlim([0 1]);
-%         xlabel('Min PPRL');
-%         ylabel('Min # Clicks');
-%         zlabel('Proportion lost');
-%         title([CTs{j},' Proportion of Clicks Lost']);
+        figure(999), clf
+        % Plot averaged scaled error surface
+        subplot(1,3,1)
+        surf(minPPRL,minNumClicks,meanTypeErr{1,j})
+        zlim([0 1]);
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Error');
+        title([CTs{j},' Mean Error']);    
+        % Plot proportion of bins lost
+        subplot(1,3,2)
+        surf(minPPRL,minNumClicks,propBinsLost{1,j})
+        zlim([0 1]);
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Proportion lost');
+        title([CTs{j},' Proportion of Bins Lost']);
+        % Plot proportion of clicks retained
+        subplot(1,3,3)
+        surf(minPPRL,minNumClicks,propClicksLost{1,j})
+        zlim([0 1]);
+        xlabel('Min PPRL');
+        ylabel('Min # Clicks');
+        zlabel('Proportion lost');
+        title([CTs{j},' Proportion of Clicks Lost']);
 %         e = input('Enter to save figure and continue' );
-%         saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
+        saveas(gcf,fullfile(errDir,[CTs{j},'_Error.fig']));
     else
         propBinsLost{1,j} = [];
         meanTypeErr{1,j} = [];

@@ -115,3 +115,86 @@ datetick('x');
 xlim([dates(1,1827) dates(1,end)]);
 
 saveas(gcf,'Atl_HARP_Deps','tiff');
+
+
+%%
+HZ = [datenum([2016,04,22]), datenum([2017,06,19]);
+    datenum([2017,07,09]),datenum([2018,01,03]);
+    datenum([2018,06,11]),datenum([2019,05,10])];
+OC = [datenum([2016,04,24]), datenum([2017,05,18]);
+    datenum([2017,07,06]),datenum([2018,04,16]);
+    datenum([2018,06,10]),datenum([2019,05,19])];
+NC = [datenum([2016,04,21]), datenum([2017,05,24]);
+    datenum([2017,07,16]),datenum([2018,06,09]);
+    datenum([2018,06,10]),datenum([2019,06,03])];
+BC = [datenum([2016,04,20]), datenum([2017,06,10]);
+    datenum([2017,06,30]),datenum([2018,06,03]);
+    datenum([2018,06,03]),datenum([2019,05,19])];
+WC = [datenum([2016,04,20]), datenum([2017,06,29]);
+    datenum([2017,06,30]),datenum([2018,06,02]);
+    datenum([2018,06,02]),datenum([2019,05,19])];
+NFC = [datenum([2016,04,30]), datenum([2017,06,28]);
+    datenum([2017,06,30]),datenum([2018,06,02]);
+    datenum([2018,06,02]),datenum([2019,05,18])];
+HAT = [datenum([2016,04,29]),datenum([2017,02,06]);
+    datenum([2017,05,09]),datenum([2017,10,25]);
+    datenum([2017,05,09]),datenum([2017,06,28]);
+    datenum([2017,10,26]),datenum([2018,06,01]);
+    datenum([2018,06,01]),datenum([2018,12,14]);
+    datenum([2018,12,14]),datenum([2019,05,17])];
+GS = [datenum([2016,04,29]), datenum([2017,06,27]);
+    datenum([2017,06,28]),datenum([2018,06,26]);
+    datenum([2018,06,28]),datenum([2019,06,18])];
+BP = [datenum([2016,04,28]), datenum([2017,06,27]);
+    datenum([2017,06,27]),datenum([2018,06,28]);
+    datenum([2018,06,28]),datenum([2019,05,28])];
+BS = [datenum([2016,04,27]), datenum([2017,06,26]);
+    datenum([2017,06,26]),datenum([2018,06,23]);
+    datenum([2018,06,28]),datenum([2019,06,16])];
+JAX = [datenum([2016,04,26]),datenum([2017,06,25]);
+    datenum([2017,06,25]),datenum([2017,10,28]);
+    datenum([2018,06,27]),datenum([2019,06,15])];
+
+
+sites = {HZ,OC,NC,BC,WC,NFC,HAT,GS,BP,BS,JAX};
+dates = [datenum([2009,01,01]):1:datenum([2019,05,21])];
+% dates = [datenum([2016,01,01]):1:datenum([2019,05,21])];
+dates(2:length(sites)+1,:) = NaN;
+
+q = length(sites);
+for i = 1:length(sites)
+    for j = 1:length(sites{i})
+        a = find(dates(1,:)>=sites{i}(j,1));
+        b = find(dates(1,:)<=sites{i}(j,end));
+        ind = intersect(a,b);
+        dates(i+1,ind) = q;
+    end
+    q = q-1;
+end
+
+figure
+plot(dates(1,:),dates(12,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+hold on
+plot(dates(1,:),dates(11,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(10,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(9,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(8,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(7,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(6,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(5,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(4,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(3,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+plot(dates(1,:),dates(2,:),'o','MarkerFaceColor',[0 153 153]/255,'MarkerEdgeColor',[0 153 153]/255,'MarkerSize',10);
+hold off
+ylim([0 12]);
+yticks([1 2 3 4 5 6 7 8 9 10 11]);
+yticklabels({'JAX','BS','BP','GS','HAT','NFC','WC','BC','NC','OC','HZ'});
+xlabel('Date');
+ylabel('Site');
+title('Atlantic HARP Deployments');
+set(gca,'fontSize',16)
+xticks([datenum(2016,01,01),datenum(2017,01,01),datenum(2018,01,01),datenum(2019,01,01)]);
+datetick('x',10);
+xlim([datenum([2016,01,01]) datenum([2019,06,15])]);
+
+saveas(gcf,'H:\Data\Atl_HARP_Deps_clean','tiff');

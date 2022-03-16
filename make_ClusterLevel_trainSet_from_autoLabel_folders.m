@@ -8,8 +8,8 @@ test_saveFileName = 'TestSet_MSPICIWV_ntest_noReps.mat';
 train_saveFileName = 'TrainSet_MSPICIWV_ntrain_noReps.mat';
 
 % Number of examples desired for train and test sets
-ntrain = ntrain;
-ntest = ntest;
+ntrain = 5000;
+ntest = 500;
 
 %%
 typeList = dir(baseDir);

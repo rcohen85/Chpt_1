@@ -19,6 +19,7 @@
 % File - cluster/toClassify/predLab file each bin comes from
 % WhichCell - which mean spectra within the cell was this label applied to
 % Probs - label confidence
+% nSpec - number of clicks contributing to each mean spectrum
 % Flag - "1" for labels to keep, "0" for labels to discard
 % NOTE: single click bins and spectra whose label confidence < labelThresh
 % (or NaN label confidence) are excluded from the "flagMat" struct
@@ -26,12 +27,12 @@
 clearvars
 
 % directory containing toClassify files
-clasDir = 'J:\JAX_D_14\clusterBins\ToClassify';
+clasDir = 'F:\WAT_BP_02\NEW_ClusterBins_120dB\ToClassify';
 suffix = '_clusters_PR95_PPmin120_toClassify.mat';
 % directory containing label files 
-labDir = 'J:\JAX_D_14\clusterBins\ToClassify\labels';
+labDir = 'F:\WAT_BP_02\NEW_ClusterBins_120dB\ToClassify\labels';
 % directory to save "flagMat" struct and plots
-savDir = 'J:\JAX_D_14\clusterBins\ToClassify\labels';
+savDir = 'F:\WAT_BP_02\NEW_ClusterBins_120dB\ToClassify\labels';
 
 NNlab = 0:19; % neural net label values
 labelThresh = 0; % only labels exceeding this confidence thresh will be saved and plotted
@@ -56,89 +57,89 @@ savname = {'Blainvilles','Boats','CT11','CT2+CT9','CT3+CT7','CT4_6+CT10',...
 
 %% Create flagMat struct with all mean spectra organized by label
 
-% clasFiles = dir(fullfile(clasDir,'*toClassify.mat'));
-% labFiles = dir(fullfile(labDir,'*predLab.mat'));
-% nFiles = size(clasFiles,1);
-% nn = length(NNlab);
-% 
-% % initialize struct to hold bin times, spectra, ICI dists, mean waveform 
-% % envelopes, cell each spectrum occupies in cluster_bins output, 
-% % label confidence, and deployment info, etc.
-% flagMat = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
-%     'Env',[],'File',[],'WhichCell',[],'Probs',[],'nSpec',[],'Flag',[]);
-% for i = 1:nn
-%     flagMat(i).CT = savname{i};
-%     flagMat(i).NNet_Lab = NNlab(i);
-% end
-% 
-% % load one cluster & corresponding label file at a time, pull out desired
-% % info for each NNet label
-% for i=1:nFiles
-%     load(fullfile(clasDir, clasFiles(i).name));
-%     load(fullfile(labDir, labFiles(i).name));
-%     
-%     q = isnan(probs);
-%     if sum(sum(q))>0
-%     fprintf('WARNING: NaN label probabilities in %s, \nthese labels will not be retained.\n',labFiles(i).name);
-%     fprintf('Press any key to continue:\n');
-%     pause
-%     end
-%     
-%     stringGrab = clasFiles(i).name;
-%     stringGrab = erase(stringGrab,suffix);
-%     
-%     for j=1:nn
-%         % find bins labeled with target label, with prob > labelThresh
-%         labInd = find(predLabels==NNlab(j));
-%         labInd = labInd(probs(labInd,j)>=labelThresh);
-%         
-%         % If high confidence labels exist, find times of labeled bins
-%         if ~isempty(labInd)
-%             if exist('toClassify')
-%                 labTime = sumTimeMat(labInd,1);
-%                 labSpec = toClassify(labInd,specInd);
-%                 labICI = toClassify(labInd,iciInd);
-%                 labEnv = toClassify(labInd,envInd);
-%                 labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
-%                 labCell = whichCell(labInd);
-%                 labProbs = probs(labInd,j);
-%                 nSpec = nSpecMat(labInd);
-%             else
-%                 fprintf('Error: Don''t recognize variable names\n');
-%                 return
-%             end
-%             
-%             flagMat(j).BinTimes = [flagMat(j).BinTimes;labTime];
-%             flagMat(j).BinSpecs = [flagMat(j).BinSpecs;labSpec];
-%             flagMat(j).ICI = [flagMat(j).ICI;labICI];
-%             flagMat(j).Env = [flagMat(j).Env;labEnv];
-%             flagMat(j).File = [flagMat(j).File;labFile];
-%             flagMat(j).WhichCell = [flagMat(j).WhichCell;labCell];
-%             flagMat(j).Probs = [flagMat(j).Probs;labProbs];
-%             flagMat(j).nSpec = [flagMat(j).nSpec;nSpec];
-%         end
-%         
-%     end
-%     fprintf('Done with file %d of %d\n',i,nFiles);
-% end
-% 
-% % Sort bins into chronological order within each label, repeated bins are ordered based on values of WhichCell
-% for j = 1:nn
-%     times_unsorted = [vertcat(flagMat(j).BinTimes),vertcat(flagMat(j).WhichCell)];
-%     [B, sortInd] = sortrows(times_unsorted); 
-%     
-%     flagMat(j).BinTimes = flagMat(j).BinTimes(sortInd);
-%     flagMat(j).BinSpecs = flagMat(j).BinSpecs(sortInd,:);
-%     flagMat(j).ICI = flagMat(j).ICI(sortInd,:);
-%     flagMat(j).Env = flagMat(j).Env(sortInd,:);
-%     flagMat(j).File = flagMat(j).File(sortInd,:);
-%     flagMat(j).WhichCell = flagMat(j).WhichCell(sortInd);
-%     flagMat(j).Probs = flagMat(j).Probs(sortInd);
-%     flagMat(j).nSpec = flagMat(j).nSpec(sortInd);
-% end
-% 
-% % save(fullfile(labDir,['FlagMat_' num2str(labelThresh*100)]),'flagMat','labelThresh','f','t','-v7.3');
-% 
+clasFiles = dir(fullfile(clasDir,'*toClassify.mat'));
+labFiles = dir(fullfile(labDir,'*predLab.mat'));
+nFiles = size(clasFiles,1);
+nn = length(NNlab);
+
+% initialize struct to hold bin times, spectra, ICI dists, mean waveform 
+% envelopes, cell each spectrum occupies in cluster_bins output, 
+% label confidence, and deployment info, etc.
+flagMat = struct('CT',[],'NNet_Lab',[],'BinTimes',[],'BinSpecs',[],'ICI',[],...
+    'Env',[],'File',[],'WhichCell',[],'Probs',[],'nSpec',[],'Flag',[]);
+for i = 1:nn
+    flagMat(i).CT = savname{i};
+    flagMat(i).NNet_Lab = NNlab(i);
+end
+
+% load one cluster & corresponding label file at a time, pull out desired
+% info for each NNet label
+for i=1:nFiles
+    load(fullfile(clasDir, clasFiles(i).name));
+    load(fullfile(labDir, labFiles(i).name));
+    
+    q = isnan(probs);
+    if sum(sum(q))>0
+    fprintf('WARNING: NaN label probabilities in %s, \nthese labels will not be retained.\n',labFiles(i).name);
+    fprintf('Press any key to continue:\n');
+    pause
+    end
+    
+    stringGrab = clasFiles(i).name;
+    stringGrab = erase(stringGrab,suffix);
+    
+    for j=1:nn
+        % find bins labeled with target label, with prob > labelThresh
+        labInd = find(predLabels==NNlab(j));
+        labInd = labInd(probs(labInd,j)>=labelThresh);
+        
+        % If high confidence labels exist, find times of labeled bins
+        if ~isempty(labInd)
+            if exist('toClassify')
+                labTime = sumTimeMat(labInd,1);
+                labSpec = toClassify(labInd,specInd);
+                labICI = toClassify(labInd,iciInd);
+                labEnv = toClassify(labInd,envInd);
+                labFile = cellstr(repmat(stringGrab,length(labInd),1,1));
+                labCell = whichCell(labInd);
+                labProbs = probs(labInd,j);
+                nSpec = nSpecMat(labInd);
+            else
+                fprintf('Error: Don''t recognize variable names\n');
+                return
+            end
+            
+            flagMat(j).BinTimes = [flagMat(j).BinTimes;labTime];
+            flagMat(j).BinSpecs = [flagMat(j).BinSpecs;labSpec];
+            flagMat(j).ICI = [flagMat(j).ICI;labICI];
+            flagMat(j).Env = [flagMat(j).Env;labEnv];
+            flagMat(j).File = [flagMat(j).File;labFile];
+            flagMat(j).WhichCell = [flagMat(j).WhichCell;labCell];
+            flagMat(j).Probs = [flagMat(j).Probs;labProbs];
+            flagMat(j).nSpec = [flagMat(j).nSpec;nSpec];
+        end
+        
+    end
+    fprintf('Done with file %d of %d\n',i,nFiles);
+end
+
+% Sort bins into chronological order within each label, repeated bins are ordered based on values of WhichCell
+for j = 1:nn
+    times_unsorted = [vertcat(flagMat(j).BinTimes),vertcat(flagMat(j).WhichCell)];
+    [B, sortInd] = sortrows(times_unsorted); 
+    
+    flagMat(j).BinTimes = flagMat(j).BinTimes(sortInd);
+    flagMat(j).BinSpecs = flagMat(j).BinSpecs(sortInd,:);
+    flagMat(j).ICI = flagMat(j).ICI(sortInd,:);
+    flagMat(j).Env = flagMat(j).Env(sortInd,:);
+    flagMat(j).File = flagMat(j).File(sortInd,:);
+    flagMat(j).WhichCell = flagMat(j).WhichCell(sortInd);
+    flagMat(j).Probs = flagMat(j).Probs(sortInd);
+    flagMat(j).nSpec = flagMat(j).nSpec(sortInd);
+end
+
+% save(fullfile(labDir,['FlagMat_' num2str(labelThresh*100)]),'flagMat','labelThresh','f','t','-v7.3');
+
 %% Plot bins by label, sorted by peak frequency, and ask for user input to 
 % % determine how to flag labels
 
@@ -146,7 +147,7 @@ temp = struct('CT',[],'BinTimes',[],'WhichCell',[],'Flag',[]);
 
 N = length(CTs);
 
-for i = [10,11,18]%1:N %for each CT, determine which labels to keep and which to flag
+for i = [7,18]%1:N %for each CT, determine which labels to keep and which to flag
     if ~isempty(flagMat(i).BinTimes)
         catSpecs = vertcat(flagMat(i).BinSpecs);
         [~, maxind] = max(catSpecs,[],2);
